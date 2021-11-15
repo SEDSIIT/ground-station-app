@@ -17,7 +17,6 @@ TO DO:
 '''
 
 ### IMPORT START ###
-from typing import AsyncIterable
 import matplotlib
 matplotlib.use("TkAgg")
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
@@ -27,10 +26,10 @@ from matplotlib import style
 from matplotlib import pyplot as plt
 
 import tkinter as tk
-from tkinter import ttk
+from tkinter import Canvas, Label, ttk
+from tkinter.filedialog import askopenfilename
 
-import urllib
-import json
+from PIL import ImageTk, Image
 
 import pandas as pd
 import numpy as np
@@ -38,13 +37,17 @@ import numpy as np
 import settings
 ### IMPORT END ###
 
+### STYLING START ###
 LARGE_FONT = ("Verdona", 12)
 style.use("ggplot")
 
-f = Figure(figsize=(5,5), dpi=100)
-a = f.add_subplot(111)
+live_figure = Figure(figsize=(5,5), dpi=100)
+live_figure_subplot = live_figure.add_subplot(111)
 
 
+### STYLING END ###
+
+file_dir = "sampledata.txt"
 
 ### CLASS START ###
 class GSApp(tk.Tk):
@@ -58,26 +61,48 @@ class GSApp(tk.Tk):
         container.grid_columnconfigure(0, weight=1)
 
         menubar = tk.Menu(container)
-        filemenu = tk.Menu(menubar, tearoff=0)
-        filemenu.add_command(label="Save Settings", command = lambda: tk.messagebox.showinfo("Information","Not supported yet!"))
-        filemenu.add_separator()
-        filemenu.add_command(label="Exit", command = quit)
-        menubar.add_cascade(label="File", menu=filemenu)
+        
+        # File Menu 
+        fileMenu = tk.Menu(menubar, tearoff=0)
+        fileMenu.add_command(label="Save Settings", command = lambda: tk.messagebox.showinfo("Information","Not supported yet!"))
+        fileMenu.add_command(label="Open", command= lambda: select_file())
+        fileMenu.add_separator()
+        fileMenu.add_command(label="Exit", command = quit)
+        menubar.add_cascade(label="File", menu=fileMenu)
+
+        # Page Menu
+        pageMenu = tk.Menu(menubar, tearoff=0)
+        pageMenu.add_command(label="Home", command = lambda: self.show_frame(HomePage))
+        pageMenu.add_separator()
+        pageMenu.add_command(label="Data Analysis", command = lambda: self.show_frame(DataAnalysis))
+        pageMenu.add_command(label="FC Config", command = lambda: self.show_frame(FCConfig))
+        pageMenu.add_command(label="Live Flight Data", command = lambda: self.show_frame(LiveFlight))
+        menubar.add_cascade(label="Page", menu=pageMenu)
+
+        # Settings Menu
+        settingsMenu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Settings", menu=settingsMenu)
+
+        # Help Menu
+        helpMenu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Help", menu=helpMenu)
 
         tk.Tk.config(self, menu=menubar)
 
         self.frames = {}
 
-        for F in (HomePage, DataAnalysis, FCConfig, LiveFlight):
+        # Load all pages initially
+        for page in (HomePage, DataAnalysis, FCConfig, LiveFlight):
 
-            frame = F(container, self)
+            frame = page(container, self)
 
-            self.frames[F] = frame
+            self.frames[page] = frame
 
             frame.grid(row=0, column=0, sticky="nsew")
         
         self.show_frame(HomePage)
-    
+
+    # Show frame that is requested
     def show_frame(self, cont):
         frame = self.frames[cont]
         frame.tkraise()
@@ -86,21 +111,38 @@ class GSApp(tk.Tk):
 
 class HomePage(tk.Frame):
     def __init__(self, parent, controller):
+        # Create multiple widgets in a frame to make organization easier
+
+        # title
         tk.Frame.__init__(self, parent)
         label = ttk.Label(self, text=("Ad Astra Per Aspera"), font=LARGE_FONT)
-        label.pack(pady=10, padx=10)
-
+        label.pack()
+        label.place(relx=0.5, rely=0.1, anchor="n")
+        
+        # menu
         button = ttk.Button(self, text="Data Analysis",
                             command=lambda: controller.show_frame(DataAnalysis))
         button.pack()
+        button.place(relx=0.3, rely=0.2, anchor="n")
 
         button2 = ttk.Button(self, text="Flight Computer Configure",
                             command=lambda: controller.show_frame(FCConfig))
         button2.pack()
+        button2.place(relx=0.5, rely=0.2, anchor="n")
 
         button3 = ttk.Button(self, text="Live Flight Data",
                             command=lambda: controller.show_frame(LiveFlight))
         button3.pack()
+        button3.place(relx=0.7, rely=0.2, anchor="n")
+        
+        # image
+        load = Image.open("SEDSIIT-logo_noBG.png")
+        render = ImageTk.PhotoImage(load)
+        img = ttk.Label(self, image=render)
+        img.image = render
+        img.pack()
+        img.place(relx=0.5, rely=0.3, anchor="n")
+        
 
 
 class DataAnalysis(tk.Frame):
@@ -112,14 +154,7 @@ class DataAnalysis(tk.Frame):
         button1 = ttk.Button(self, text="Home",
                             command=lambda: controller.show_frame(HomePage))
         button1.pack()
-        # Plots
-        canvas = FigureCanvasTkAgg(f, self)
-        canvas.draw()
-        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-
-        toolbar = NavigationToolbar2Tk(canvas,self)
-        toolbar.update()
-        canvas._tkcanvas.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
+        # plot
 
 
 class FCConfig(tk.Frame):
@@ -143,10 +178,18 @@ class LiveFlight(tk.Frame):
                             command=lambda: controller.show_frame(HomePage))
         button1.pack()
 
+        # Live Plot
+        canvas = FigureCanvasTkAgg(live_figure, self)
+        canvas.draw()
+        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+        toolbar = NavigationToolbar2Tk(canvas,self)
+        toolbar.update()
+        canvas._tkcanvas.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
 
 # Individual Pages End
-
 ### CLASS END ###
+
 
 ### FUNCTION DEFINE START ###
 # Get window screen information to scale window properly
@@ -173,27 +216,31 @@ def get_win_dimensions(root):
     return window_dimensions
 
 # Used to animate a matplotlib figure
-def animate(i):
-    pullData = open("sampledata.txt","r").read()
-    dataList = pullData.split("\n")
-    xList = []
-    yList = []
-    for eachLine in dataList:
-        if len(eachLine) > 1:
-            x, y = eachLine.split(',')
-            xList.append(int(x))
-            yList.append(int(y))
-    a.clear()
-    a.plot(xList, yList)
+def animate_live_plot(i):
+    file_path_historical = "/home/michael/Desktop/School/SEDS/ground-station/gui/RRC3-LittleRedFlightData.csv"
+    data_historical = pd.read_csv(file_path_historical)
+    data_historical.drop(["Events"], axis=1)
+    
+    live_figure_subplot.clear()
+    live_figure_subplot.plot(data_historical['Time'], data_historical['Altitude'], color="k")
+    live_figure_subplot.plot(data_historical['Time'], data_historical['Velocity'], color="r")
+    live_figure_subplot.set_xlabel("Time (sec)")
+    live_figure_subplot.set_ylabel("Height (m)")
+
+
+
+def select_file():
+    file_dir = askopenfilename()
 
 
 def main():
     app = GSApp()
     app.geometry(get_win_dimensions(app))
+    app.minsize(500,300)
     app.title("Ground Station Application")
     img = tk.Image("photo", file="SEDSIIT-logo.png")
     app.tk.call('wm','iconphoto',app._w,img)
-    ani = animation.FuncAnimation(f, animate, interval=1000)
+    ani = animation.FuncAnimation(live_figure, animate_live_plot, interval=500)
     app.mainloop()
 
 ### FUNCTION DEFINE END ###
@@ -206,7 +253,6 @@ if (DEBUG == True):
     print()
 
 ### SETUP END ###
-
 
 
 ### MAIN START ###
