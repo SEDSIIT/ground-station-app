@@ -35,6 +35,8 @@ import pandas as pd
 import numpy as np
 
 import settings
+import os
+import sys
 ### IMPORT END ###
 
 ### STYLING START ###
@@ -217,7 +219,10 @@ def get_win_dimensions(root):
 
 # Used to animate a matplotlib figure
 def animate_live_plot(i):
-    file_path_historical = "/home/michael/Desktop/School/SEDS/ground-station/gui/RRC3-LittleRedFlightData.csv"
+    absolute_path = os.path.abspath(__file__)
+    parent_directory = os.path.dirname(absolute_path)
+    file_path_historical= os.path.join(parent_directory, 'RRC3-LittleRedFlightData.csv')
+
     data_historical = pd.read_csv(file_path_historical)
     data_historical.drop(["Events"], axis=1)
     
