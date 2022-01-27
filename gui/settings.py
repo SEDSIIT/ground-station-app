@@ -2,6 +2,8 @@
 Configuration for the style, size, and elements of the GUI
 will be configured here
 '''
+class DEBUG:
+    status = True
 
 class window:
     scale_height = 0.5

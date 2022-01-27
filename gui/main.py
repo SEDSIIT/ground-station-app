@@ -1,19 +1,27 @@
 '''
-This software is the ground station GUI software that will
-be used to view and analyze flight data while also be able
-to configure the custom flight computer built by the
-students of SEDS@IIT.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
-The goal is to make the software compatable with multiple
-OS enviroments with minimal additional packages and easy
-to use for users unfamiliar with the software.
+This software is the ground station GUI software that willbe used to view and
+analyze flight data while also be able to configure the custom flight computer
+built by the students of SEDS@IIT.
+
+The goal is to make the software compatable with multiple OS enviroments with
+minimal additional packages and easy to use for users unfamiliar with the
+software.
 
 TO DO:
+- make all files and data relative
+- fix the quit() define bug
 - have matplotlib plots appear in the gui window in quadrants
 - have a performance metric bar on the side of the GUI
-- be able to communicate with USB devices
+- be able to communicate with STM32F4 over USB (COM)
 - have a window to print output of USB device
-- be able to send messages to USB device
 '''
 
 ### IMPORT START ###
@@ -36,7 +44,6 @@ import numpy as np
 
 import settings
 import os
-import sys
 ### IMPORT END ###
 
 ### STYLING START ###
@@ -49,7 +56,9 @@ live_figure_subplot = live_figure.add_subplot(111)
 
 ### STYLING END ###
 
-file_dir = "sampledata.txt"
+### GLOBAL VARIABLES START ###
+PATH = os.path.dirname(__file__)
+### GLOBAL VARIABLES END ###
 
 ### CLASS START ###
 class GSApp(tk.Tk):
@@ -69,7 +78,7 @@ class GSApp(tk.Tk):
         fileMenu.add_command(label="Save Settings", command = lambda: tk.messagebox.showinfo("Information","Not supported yet!"))
         fileMenu.add_command(label="Open", command= lambda: select_file())
         fileMenu.add_separator()
-        fileMenu.add_command(label="Exit", command = quit)
+        fileMenu.add_command(label="Exit", command = lambda: quit()) # Fixed?
         menubar.add_cascade(label="File", menu=fileMenu)
 
         # Page Menu
@@ -138,8 +147,8 @@ class HomePage(tk.Frame):
         button3.place(relx=0.7, rely=0.2, anchor="n")
         
         # image
-        load = Image.open("SEDSIIT-logo_noBG.png")
-        render = ImageTk.PhotoImage(load)
+        filepath_logo_nobg = os.path.join(PATH,"images\\SEDSIIT-logo_noBG.png")
+        render = ImageTk.PhotoImage(Image.open(filepath_logo_nobg))
         img = ttk.Label(self, image=render)
         img.image = render
         img.pack()
@@ -204,7 +213,7 @@ def get_win_dimensions(root):
 
     window_dimensions = str(window_width) + "x" + str(window_height)
     
-    if (DEBUG == True):
+    if (settings.DEBUG.status == True):
         print("Window Stats:")
         print("screen width:", screen_width)
         print("window width scale:", settings.window.scale_width)
@@ -219,9 +228,7 @@ def get_win_dimensions(root):
 
 # Used to animate a matplotlib figure
 def animate_live_plot(i):
-    absolute_path = os.path.abspath(__file__)
-    parent_directory = os.path.dirname(absolute_path)
-    file_path_historical= os.path.join(parent_directory, 'RRC3-LittleRedFlightData.csv')
+    file_path_historical= os.path.join(PATH, 'data\\example_data.csv')
 
     data_historical = pd.read_csv(file_path_historical)
     data_historical.drop(["Events"], axis=1)
@@ -230,37 +237,34 @@ def animate_live_plot(i):
     live_figure_subplot.plot(data_historical['Time'], data_historical['Altitude'], color="k")
     live_figure_subplot.plot(data_historical['Time'], data_historical['Velocity'], color="r")
     live_figure_subplot.set_xlabel("Time (sec)")
-    live_figure_subplot.set_ylabel("Height (m)")
+    live_figure_subplot.set_ylabel("Height (ft)")
 
 
 
 def select_file():
     file_dir = askopenfilename()
 
-
+### MAIN START ###
 def main():
+    ### SETUP START ###
+    if (settings.DEBUG.status == True):
+        print("Starting ground station GUI...")
+        print()
+    ### SETUP END ###
+
     app = GSApp()
     app.geometry(get_win_dimensions(app))
-    app.minsize(500,300)
+    app.minsize(600,400)
     app.title("Ground Station Application")
-    img = tk.Image("photo", file="SEDSIIT-logo.png")
-    app.tk.call('wm','iconphoto',app._w,img)
-    ani = animation.FuncAnimation(live_figure, animate_live_plot, interval=500)
-    app.mainloop()
 
+    filepath_icon_photo = os.path.join(PATH, 'images\\SEDSIIT-logo.png')
+    app.tk.call('wm','iconphoto',app._w,tk.Image("photo", file=filepath_icon_photo))
+
+    ani = animation.FuncAnimation(live_figure, animate_live_plot, interval=500)
+
+    app.mainloop()
+### MAIN END ###
 ### FUNCTION DEFINE END ###
 
-
-### SETUP START ###
-DEBUG = True
-if (DEBUG == True):
-    print("Starting ground station GUI...")
-    print()
-
-### SETUP END ###
-
-
-### MAIN START ###
 if __name__ == '__main__':
     main()
-### MAIN END ###
