@@ -16,8 +16,8 @@ minimal additional packages and easy to use for users unfamiliar with the
 software.
 
 TO DO:
-- fix bug on static plot need to move plot to see plotted data
-- have matplotlib plots appear in the gui window in quadrants
+# - fix bug on static plot need to move plot to see plotted data
+# - have matplotlib plots appear in the gui window in quadrants
 - have a performance metric bar on the side of the GUI
 - be able to communicate with STM32F4 over USB (COM)
 - have a window to print output of USB device
@@ -52,12 +52,16 @@ LARGE_FONT = ("Verdona", 12)
 style.use("ggplot")
 
 live_plot = Figure(figsize=(5,5), dpi=100)
-live_plot_subplot = live_plot.add_subplot(111)
-
+live_plot_subplot1 = live_plot.add_subplot(221)
+live_plot_subplot2 = live_plot.add_subplot(222)
+live_plot_subplot3 = live_plot.add_subplot(223)
+live_plot_subplot4 = live_plot.add_subplot(224)
 
 static_plot = Figure(figsize=(5,5), dpi=100)
-static_plot_subplot = static_plot.add_subplot(111)
-
+static_plot_subplot1 = static_plot.add_subplot(221)
+static_plot_subplot2 = static_plot.add_subplot(222)
+static_plot_subplot3 = static_plot.add_subplot(223)
+static_plot_subplot4 = static_plot.add_subplot(224)
 
 ### STYLING END ###
 
@@ -72,8 +76,9 @@ elif sys.platform == "win32":
 else:
     print("WARNING: Unrecognized platform")
     quit()
-PATH_DATAFILE = ''
-PATH_LIVEDATA = os.path.join(PATH, 'data', 'example_data.csv') # placeholder
+    
+PATH_DATAFILE = os.path.join(PATH, 'data', 'Init.csv')
+PATH_LIVEDATA = os.path.join(PATH, 'data', 'TestData.csv') # placeholder
 
 ### GLOBAL VARIABLES END ###
 
@@ -189,6 +194,7 @@ class DataAnalysis(tk.Frame):
         canvas = FigureCanvasTkAgg(static_plot, self)
         canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
         canvas.draw()
+        
 
         toolbar = NavigationToolbar2Tk(canvas, self)
         toolbar.update()
@@ -257,26 +263,44 @@ def animate_live_plot(i):
     data = pd.read_csv(PATH_LIVEDATA)
     data.drop(["Events"], axis=1)
     
-    live_plot_subplot.clear()
-    live_plot_subplot.plot(data['Time'], data['Altitude'], color='k')
-    live_plot_subplot.plot(data['Time'], data['Velocity'], color='r')
-    live_plot_subplot.set_xlabel("Time (sec)")
-    live_plot_subplot.set_ylabel("AGL Altitude (ft)")
+    live_plot_subplot1.clear()
+    live_plot_subplot2.clear()
+    live_plot_subplot3.clear()
+    live_plot_subplot4.clear()
+    live_plot_subplot1.plot(data['Time'], data['Altitude'], color='k')
+    live_plot.subplots_adjust(hspace = 0.3)
+    live_plot_subplot2.plot(data['Time'], data['Velocity'], color='r')
+    live_plot_subplot1.set_xlabel("Time (sec)")
+    live_plot_subplot1.set_ylabel("AGL Altitude (ft)")
+    live_plot_subplot2.set_xlabel("Time (sec)")
+    live_plot_subplot2.set_ylabel("Velocity (ft/s)")
+    live_plot_subplot3 
+    live_plot_subplot4
 
 def plot_static(): 
     data = pd.read_csv(PATH_DATAFILE)
     data.drop(["Events"], axis=1)
-
-    static_plot_subplot.clear()
-    static_plot_subplot.plot(data['Time'], data['Altitude'], color='k')
-    static_plot_subplot.set_xlabel("Time (sec)")
-    static_plot_subplot.set_ylabel("Altitude (ft)")
+   
+    static_plot_subplot1.clear()
+    static_plot_subplot2.clear()
+    static_plot_subplot3.clear()
+    static_plot_subplot4.clear()
+    static_plot_subplot1.plot(data['Time'], data['Altitude'], color='k')
+    static_plot.subplots_adjust(hspace = 0.3)
+    static_plot_subplot2.plot(data['Time'], data['Velocity'], color='r')
+    static_plot_subplot1.set_xlabel("Time (sec)")
+    static_plot_subplot1.set_ylabel("AGL Altitude (ft)")
+    static_plot_subplot2.set_xlabel("Time (sec)")
+    static_plot_subplot2.set_ylabel("Velocity (ft/s)")
+    static_plot_subplot3 
+    static_plot_subplot4
 
 def select_file():
     global PATH_DATAFILE
     PATH_DATAFILE = askopenfilename()
     print("Selected data file path: %s" % (PATH_DATAFILE))
     plot_static()
+    
 
 ### MAIN START ###
 def main():
@@ -295,7 +319,7 @@ def main():
     app.tk.call('wm','iconphoto',app._w,tk.Image("photo", file=filepath_icon_photo))
 
     ani = animation.FuncAnimation(live_plot, animate_live_plot, interval=500)
-
+   
     app.mainloop()
 ### MAIN END ###
 ### FUNCTION DEFINE END ###
