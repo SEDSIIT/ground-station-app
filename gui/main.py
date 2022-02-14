@@ -16,8 +16,7 @@ minimal additional packages and easy to use for users unfamiliar with the
 software.
 
 TO DO:
-# - fix bug on static plot need to move plot to see plotted data
-# - have matplotlib plots appear in the gui window in quadrants
+- fix bug on static plot need to move plot to see plotted data
 - have a performance metric bar on the side of the GUI
 - be able to communicate with STM32F4 over USB (COM)
 - have a window to print output of USB device
