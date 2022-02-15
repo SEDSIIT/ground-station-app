@@ -29,7 +29,6 @@ from distutils import command
 from faulthandler import disable
 import string
 from turtle import width
-from typing_extensions import IntVar
 import matplotlib
 from matplotlib import image
 from paramiko import Channel
@@ -161,8 +160,8 @@ class HomePage(tk.Frame):
 
         # Homescreen title
         fontStyle = tkFont.Font(family="Lucida Grande", size=32)
-        label = ttk.Label(self, text=("𝑨𝒅 𝑨𝒔𝒕𝒓𝒂 𝑷𝒆𝒓 𝑨𝒔𝒑𝒆𝒓𝒂"), font=fontStyle)
-        label.pack(pady=5, padx=5)
+        label = ttk.Label(self, text=("Ad Astra Per Aspera"), font=fontStyle)
+        label.pack(pady=5, padx=5) 
         label.place(relx=0.5, rely=0.1, anchor="n")
         
         # menu
@@ -249,13 +248,13 @@ class FCSettings(tk.Frame):
         aux = ttk.Frame(notebook)
         testing = ttk.Frame(notebook)
         
-        notebook.add(recovery, text="𝙍𝙚𝙘𝙤𝙫𝙚𝙧𝙮")
-        notebook.add(auxPyro, text="𝘼𝙪𝙭 𝙋𝙮𝙧𝙤")
-        notebook.add(telemetryConfig, text="𝙏𝙚𝙡𝙚𝙢𝙚𝙩𝙧𝙮 𝘾𝙤𝙣𝙛𝙞𝙜")
-        notebook.add(calibration, text="𝘾𝙖𝙡𝙞𝙗𝙧𝙖𝙩𝙞𝙤𝙣")
-        notebook.add(data, text="𝘿𝙖𝙩𝙖")
-        notebook.add(aux, text="𝘼𝙪𝙭")
-        notebook.add(testing, text="𝙏𝙚𝙨𝙩𝙞𝙣𝙜")
+        notebook.add(recovery, text="Recovery")
+        notebook.add(auxPyro, text="Aux Pyro")
+        notebook.add(telemetryConfig, text="Telemetry Config")
+        notebook.add(calibration, text="Calibration")
+        notebook.add(data, text="Data")
+        notebook.add(aux, text="Aux")
+        notebook.add(testing, text="Testing")
         notebook.pack(padx=16, pady=30)
         
         #TODO: Fix the issue of no warning on testing tab when it is selected
