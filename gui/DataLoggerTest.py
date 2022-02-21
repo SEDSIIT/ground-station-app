@@ -1,25 +1,29 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Jan 30 13:58:53 2022
-
-@author: user
-"""
-#necessary libraries
+'''
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+'''
+# necessary libraries
 import numpy as np
 import os
 import time
 
-#initialize file name - ok if it rewrites the file every time for testing
+# initialize file name - ok if it rewrites the file every time for testing
 FileName = 'TestData.csv'
 cwd = os.getcwd()
 FilePath = os.path.join(cwd, 'data', FileName)
 
-#open file to begin writing process
+# open file to begin writing process
 f = open(FilePath, 'w')
 f.write('Time,Altitude,Velocity,Events\r')
-#Can change these
-duration = 30 #test time
-sampling_rate = 10 #Hz
+
+# Can change these
+duration = 30 # test time
+sampling_rate = 10 # Hz
 
 start = time.time()
 current = 0
@@ -32,6 +36,4 @@ while duration > current:
     time.sleep(1/sampling_rate)
     current = time.time() - start
      
-    
-    
 f.close()

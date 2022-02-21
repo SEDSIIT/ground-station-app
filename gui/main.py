@@ -7,6 +7,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
+ABOUT:
 This software is the ground station GUI software that will be used to view and
 analyze flight data while also be able to configure the custom flight computer
 built by the students of SEDS@IIT.
@@ -15,43 +16,33 @@ The goal is to make the software compatable with multiple OS enviroments with
 minimal additional packages and easy to use for users unfamiliar with the
 software.
 
-TO DO:
-# - fix bug on static plot need to move plot to see plotted data
-# - have matplotlib plots appear in the gui window in quadrants
-- have a performance metric bar on the side of the GUI
-- be able to communicate with STM32F4 over USB (COM)
-- have a window to print output of USB device
+TODO:
+For latest tasks go to: https://github.com/SEDSIIT/ground-station-app/projects/1
 '''
 
 ### IMPORT START ###
-from dataclasses import dataclass
-from distutils import command
-from faulthandler import disable
-import string
-from turtle import width
 import matplotlib
 from matplotlib import image
-from paramiko import Channel
-from sqlalchemy import true
 matplotlib.use("TkAgg")
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.figure import Figure
 import matplotlib.animation as animation
 from matplotlib import style
-from matplotlib import pyplot as plt
+
 
 import tkinter as tk
-from tkinter import BOTH, DISABLED, TOP, Canvas, Entry, Label, PhotoImage, StringVar, ttk
-from tkinter.filedialog import askopenfilename
+from tkinter import TOP, Entry, Label, StringVar, ttk
+from tkinter.filedialog import askopenfilename, asksaveasfilename
 import tkinter.font as tkFont
 
 from PIL import ImageTk, Image
 
-import pandas as pd
-import numpy as np
-
 import os
 import sys
+import shutil
+import time
+import threading
+import pandas as pd
 
 import settings
 ### IMPORT END ###
@@ -88,12 +79,14 @@ elif sys.platform == "win32":
 else:
     print("WARNING: Unrecognized platform")
     quit()
-    
-PATH_DATAFILE = os.path.join(PATH, 'data', 'Init.csv')
-PATH_LIVEDATA = os.path.join(PATH, 'data', 'LiveData.csv') # placeholder
+  
+PATH_LIVEDATA = os.path.join(PATH, 'data', 'temp', 'telemetry_temp.csv') # location of telemetry data
+PATH_DATAFILE = PATH_LIVEDATA
 
 ## For generating live data sim, comment out when not needed ##
 PATH_HISTDATA = os.path.join(PATH, 'data', 'example_data.csv')
+
+CURRENT_PAGE = "HomePage"
 
 ### For Simulation Live Data Read. Comment out when reading actual live data ###
 data = [[0,0,0,0,0]]
@@ -101,6 +94,7 @@ ex_livedata = pd.DataFrame(data, columns = ['Time', 'Altitude', 'Velocity', 'Lat
 ex_livedata.to_csv(PATH_LIVEDATA)
 rng = np.random.default_rng(seed=31)
 ### End Live Data Simulation ###
+
 
 ### GLOBAL VARIABLES END ###
 
@@ -119,10 +113,10 @@ class GSApp(tk.Tk):
         
         # File Menu 
         fileMenu = tk.Menu(menubar, tearoff=0)
-        fileMenu.add_command(label="Save Settings", command = lambda: tk.messagebox.showinfo("Information","Not supported yet!"))
+        fileMenu.add_command(label="Save As", command = lambda: save_file())
         fileMenu.add_command(label="Open", command= lambda: select_file())
         fileMenu.add_separator()
-        fileMenu.add_command(label="Exit", command = lambda: quit()) # Fixed?
+        fileMenu.add_command(label="Exit", command = lambda: quit()) 
         menubar.add_cascade(label="File", menu=fileMenu)
 
         # Page Menu
@@ -130,24 +124,22 @@ class GSApp(tk.Tk):
         pageMenu.add_command(label="Home", command = lambda: self.show_frame(HomePage))
         pageMenu.add_separator()
         pageMenu.add_command(label="Data Analysis", command = lambda: self.show_frame(DataAnalysis))
-        pageMenu.add_command(label="FC Settings", command = lambda: self.show_frame(FCSettings))
-        pageMenu.add_command(label="Live Flight Data", command = lambda: self.show_frame(LiveFlight))
+        pageMenu.add_command(label="FC Config", command = lambda: self.show_frame(FCSettings))
+        pageMenu.add_command(label="Telemetry", command = lambda: self.show_frame(Telemetry))
         menubar.add_cascade(label="Page", menu=pageMenu)
 
         # Settings Menu
-        settingsMenu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Settings", menu=settingsMenu)
+        menubar.add_command(label="Settings", command=lambda: self.show_frame(Settings))
 
         # Help Menu
-        helpMenu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Help", menu=helpMenu)
+        menubar.add_command(label="Help", command=lambda: tk.messagebox.showinfo("Information","Not supported yet!"))
 
         tk.Tk.config(self, menu=menubar)
 
         self.frames = {}
 
         # Load all pages initially
-        for page in (HomePage, DataAnalysis, FCSettings, LiveFlight):
+        for page in (HomePage, DataAnalysis, FCSettings, Telemetry, Settings):
 
             frame = page(container, self)
 
@@ -159,6 +151,19 @@ class GSApp(tk.Tk):
 
     # Show frame that is requested
     def show_frame(self, cont):
+        global CURRENT_PAGE
+        if (cont.__name__ == 'DataAnalysis'):
+            CURRENT_PAGE = "DataAnalysis"
+        elif (cont.__name__ == 'FCSettings'):
+            CURRENT_PAGE = "FCSettings"
+        elif (cont.__name__ == 'Telemetry'):
+            CURRENT_PAGE = "Telemetry"
+        elif (cont.__name__ == 'Settings'):
+            CURRENT_PAGE = "Settings"
+        else:
+            CURRENT_PAGE = "HomePage" 
+        if (settings.DEBUG.status == True):
+            print("CURRENT_PAGE: %s" %(CURRENT_PAGE))
         frame = self.frames[cont]
         frame.tkraise()
 
@@ -178,18 +183,18 @@ class HomePage(tk.Frame):
         label.place(relx=0.5, rely=0.1, anchor="n")
         
         # menu
-        button = ttk.Button(self, text="Data Analysis",
+        button = ttk.Button(self, text="Flight Analysis",
                             command=lambda: controller.show_frame(DataAnalysis))
         button.pack()
         button.place(relx=0.3, rely=0.2, anchor="n")
 
-        button2 = ttk.Button(self, text="Flight Control Settings",
+        button2 = ttk.Button(self, text="Flight Computer Configuration",
                             command=lambda: controller.show_frame(FCSettings))
         button2.pack()
         button2.place(relx=0.5, rely=0.2, anchor="n")
 
-        button3 = ttk.Button(self, text="Live Flight Data",
-                            command=lambda: controller.show_frame(LiveFlight))
+        button3 = ttk.Button(self, text="Telemetry",
+                            command=lambda: controller.show_frame(Telemetry))
         button3.pack()
         button3.place(relx=0.7, rely=0.2, anchor="n")
         
@@ -201,6 +206,18 @@ class HomePage(tk.Frame):
         img.image = render
         img.pack()
         img.place(relx=0.5, rely=0.3, anchor="n")
+
+class Settings(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        label = ttk.Label(self, text="Settings", font=LARGE_FONT)
+        label.grid(column=1, row=0)
+
+        
+        
+        homeButton = ttk.Button(self, text="Home",
+                    command=lambda: controller.show_frame(HomePage))
+        homeButton.grid(column=1,row=1)
         
 
 
@@ -662,15 +679,7 @@ class FCSettings(tk.Frame):
         #<<<END>>> Testing frame
         
         
-        
-        
-        
-        
-        
-        
-        
-        
-class LiveFlight(tk.Frame):
+class Telemetry(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         label = ttk.Label(self, text="Telemetry Data", font=LARGE_FONT)
@@ -718,42 +727,97 @@ def get_win_dimensions(root):
 
 # Used to animate a matplotlib figure
 def animate_live_plot(i):
-    data = pd.read_csv(PATH_LIVEDATA)
-    #data.drop(["Events"], axis=1)
+
+=======
+    if (CURRENT_PAGE == "Telemetry"): # To do: add additional statement to require new data to update plot
+        if (settings.DEBUG.status == True):
+            start = time.time()
+            print("\nTelemetry plot performance:")
     
-    live_plot_subplot1.clear()
-    live_plot_subplot2.clear()
-    live_plot_subplot3.clear()
-    live_plot_subplot4.clear()
-    live_plot_subplot1.plot(data['Time'], data['Altitude'], color='k')
-    live_plot.subplots_adjust(hspace = 0.3)
-    live_plot_subplot2.plot(data['Time'], data['Velocity'], color='r')
-    live_plot_subplot1.set_xlabel("Time (sec)")
-    live_plot_subplot1.set_ylabel("AGL Altitude (ft)")
-    live_plot_subplot2.set_xlabel("Time (sec)")
-    live_plot_subplot2.set_ylabel("Velocity (ft/s)")
-    live_plot_subplot3.plot(data['Longitude'], data['Latitude'], color='b')
-    live_plot_subplot3.set_xlabel("Longitude (deg)")
-    live_plot_subplot3.set_ylabel("Latitude (deg)")
-    live_plot_subplot4
+        data = pd.read_csv(PATH_LIVEDATA)
+        try:
+            data.drop(["Events"], axis=1)
+        except:
+            if (settings.DEBUG.status == True):
+                print("WARNING: No 'Events' in data file")
+        
+        if (settings.DEBUG.status == True):
+            data_time_stop = time.time()
+            print("Data Read Time: %f sec" %(data_time_stop-start))
+            start = time.time()
+
+        live_plot.subplots_adjust(hspace = 0.3)
+
+        # Multi-threading start (Note: this takes longer than a single thread)
+
+        def plot_altitude():
+            live_plot_subplot1.clear()
+            live_plot_subplot1.plot(data['Time'], data['Altitude'], color='k')
+            live_plot_subplot1.set_xlabel("Time (sec)")
+            live_plot_subplot1.set_ylabel("AGL Altitude (ft)")
+
+        def plot_velocity():
+            live_plot_subplot2.clear()
+            live_plot_subplot2.plot(data['Time'], data['Velocity'], color='k')
+            live_plot_subplot2.set_xlabel("Time (sec)")
+            live_plot_subplot2.set_ylabel("Velocity (ft/s)")
+
+        def plot_acceleration():
+            live_plot_subplot3.clear()
+            live_plot_subplot3.plot(data['Time'], data['Acceleration'], color='k')
+            live_plot_subplot3.set_xlabel("Time (sec)")
+            live_plot_subplot3.set_ylabel("Acceleration (G)")
+
+        def plot_coordinates():
+            live_plot_subplot4.clear()
+            live_plot_subplot4.plot(data['Longitude'], data['Latitude'], color='k')
+            live_plot_subplot4.set_xlabel("Longitude (deg)")
+            live_plot_subplot4.set_ylabel("Latitude (deg)")
+
+        t1 = threading.Thread(target=plot_altitude)
+        t2 = threading.Thread(target=plot_velocity)
+        t3 = threading.Thread(target=plot_acceleration)
+        t4 = threading.Thread(target=plot_coordinates)
+        
+        t1.start()
+        t2.start()
+        t3.start()
+        t4.start()
+
+        t1.join()
+        t2.join()
+        t3.join()
+        t4.join()
+
+        if (settings.DEBUG.status == True):
+            data_plot_stop = time.time()
+            print("Plot Time: %f sec\n" %(data_plot_stop-start))
 
 def plot_static(): 
     data = pd.read_csv(PATH_DATAFILE)
-    data.drop(["Events"], axis=1)
-   
+    try:
+        data.drop(["Events"], axis=1)
+    except:
+        if (settings.DEBUG.status == True):
+            print("WARNING: No 'Events' in data file")
+    static_plot.subplots_adjust(hspace = 0.3)
+
     static_plot_subplot1.clear()
     static_plot_subplot2.clear()
     static_plot_subplot3.clear()
     static_plot_subplot4.clear()
+    
     static_plot_subplot1.plot(data['Time'], data['Altitude'], color='k')
-    static_plot.subplots_adjust(hspace = 0.3)
-    static_plot_subplot2.plot(data['Time'], data['Velocity'], color='r')
     static_plot_subplot1.set_xlabel("Time (sec)")
     static_plot_subplot1.set_ylabel("AGL Altitude (ft)")
+    
+    static_plot_subplot2.plot(data['Time'], data['Velocity'], color='r')
     static_plot_subplot2.set_xlabel("Time (sec)")
     static_plot_subplot2.set_ylabel("Velocity (ft/s)")
-    static_plot_subplot3 
-    static_plot_subplot4
+    
+    static_plot_subplot3.set_xlabel("Time (sec)")
+    static_plot_subplot3.set_ylabel("Acceleration (G)")
+
 
 def animate_live_table(i):
     data = pd.read_csv(PATH_LIVEDATA)
@@ -824,15 +888,39 @@ def plot_static():
     static_plot_subplot1.set_ylabel("AGL Altitude (ft)")
     static_plot_subplot2.set_xlabel("Time (sec)")
     static_plot_subplot2.set_ylabel("Velocity (ft/s)")
-    static_plot_subplot3 
-    static_plot_subplot4
+    static_plot_subplot4.set_xlabel("Longitude (deg)")
+    static_plot_subplot4.set_ylabel("Latitude (deg)")
 
 def select_file():
     global PATH_DATAFILE
     PATH_DATAFILE = askopenfilename()
-    print("Selected data file path: %s" % (PATH_DATAFILE))
+    if (settings.DEBUG.status == True):
+        print("Selected data file path: %s" % (PATH_DATAFILE))
+    #GSApp.show_frame(DataAnalysis) 
     plot_static()
     
+# Saves temporary telemetry flight data file and saves it in a specified location
+def save_file(): 
+    global PATH_LIVEDATA, PATH_DATAFILE
+    PATH_DATAFILE = asksaveasfilename(filetypes=[("comma separated value (*.csv)", "*.csv")]) + ".csv"
+    shutil.copyfile(PATH_LIVEDATA, PATH_DATAFILE)
+    if (settings.DEBUG.status == True):
+        print("Taking telemetry file: %s" %(PATH_LIVEDATA))
+        print("Saving as: %s" %(PATH_DATAFILE))
+
+# Clear temporary telemetry flight data file
+def telemetry_file_init():
+    global PATH_LIVEDATA
+    if os.path.exists(PATH_LIVEDATA):
+        os.remove(PATH_LIVEDATA)
+    else:
+        print("WARNING: Telemetry file not found!")
+    temp_file = open(PATH_LIVEDATA,"x")
+    temp_file.write("Time,Altitude,Velocity,Acceleration,Latitude,Longitude,Events\n") # empty header
+    temp_file.close()
+    if (settings.DEBUG.status == True):
+        print("Clearing temp file: %s" %(PATH_LIVEDATA))
+
 
 ### MAIN START ###
 def main():
@@ -841,6 +929,7 @@ def main():
         print("Starting ground station GUI...")
         print()
     ### SETUP END ###
+    telemetry_file_init()
 
     app = GSApp()
     app.geometry(get_win_dimensions(app))
@@ -850,9 +939,10 @@ def main():
     filepath_icon_photo = os.path.join(PATH, 'images', 'SEDSIIT-logo.png')
     app.tk.call('wm','iconphoto',app._w,tk.Image("photo", file=filepath_icon_photo))
 
-    
+
     ani = animation.FuncAnimation(live_plot, animate_live_plot, interval=500)
     ani2 = animation.FuncAnimation(live_table, animate_live_table, interval=500)
+
    
     app.mainloop()
 ### MAIN END ###
