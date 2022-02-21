@@ -57,6 +57,9 @@ live_plot_subplot2 = live_plot.add_subplot(222)
 live_plot_subplot3 = live_plot.add_subplot(223)
 live_plot_subplot4 = live_plot.add_subplot(224)
 
+live_table = Figure(figsize=(5,5), dpi = 100)
+live_table_subplot = live_table.add_subplot(111)
+
 static_plot = Figure(figsize=(5,5), dpi=100)
 static_plot_subplot1 = static_plot.add_subplot(221)
 static_plot_subplot2 = static_plot.add_subplot(222)
@@ -76,11 +79,22 @@ elif sys.platform == "win32":
 else:
     print("WARNING: Unrecognized platform")
     quit()
-
+  
 PATH_LIVEDATA = os.path.join(PATH, 'data', 'temp', 'telemetry_temp.csv') # location of telemetry data
 PATH_DATAFILE = PATH_LIVEDATA
 
+## For generating live data sim, comment out when not needed ##
+PATH_HISTDATA = os.path.join(PATH, 'data', 'example_data.csv')
+
 CURRENT_PAGE = "HomePage"
+
+### For Simulation Live Data Read. Comment out when reading actual live data ###
+data = [[0,0,0,0,0]]
+ex_livedata = pd.DataFrame(data, columns = ['Time', 'Altitude', 'Velocity', 'Latitude', 'Longitude'])
+ex_livedata.to_csv(PATH_LIVEDATA)
+rng = np.random.default_rng(seed=31)
+### End Live Data Simulation ###
+
 
 ### GLOBAL VARIABLES END ###
 
@@ -213,17 +227,26 @@ class DataAnalysis(tk.Frame):
         label = ttk.Label(self, text="Data Analysis", font=LARGE_FONT)
         label.pack(pady=10, padx=10)
 
-        button_file_select = ttk.Button(self, text="Select File",
-                                    command=lambda: select_file())
+        button_file_select = ttk.Button(self, text="Home",
+                                    command=lambda: controller.show_frame(HomePage))
         button_file_select.pack(side=TOP)
 
         # static plot
-        canvas = FigureCanvasTkAgg(static_plot, self)
-        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-        canvas.draw()
+        #canvas = FigureCanvasTkAgg(static_plot, self)
+        #canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        #canvas.draw()
         
 
-        toolbar = NavigationToolbar2Tk(canvas, self)
+        #toolbar = NavigationToolbar2Tk(canvas, self)
+        #toolbar.update()
+        #canvas._tkcanvas.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
+
+        # Live plot
+        canvas = FigureCanvasTkAgg(live_table, self)
+        canvas.draw()
+        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+        toolbar = NavigationToolbar2Tk(canvas,self)
         toolbar.update()
         canvas._tkcanvas.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
 
@@ -704,6 +727,8 @@ def get_win_dimensions(root):
 
 # Used to animate a matplotlib figure
 def animate_live_plot(i):
+
+=======
     if (CURRENT_PAGE == "Telemetry"): # To do: add additional statement to require new data to update plot
         if (settings.DEBUG.status == True):
             start = time.time()
@@ -768,7 +793,6 @@ def animate_live_plot(i):
             data_plot_stop = time.time()
             print("Plot Time: %f sec\n" %(data_plot_stop-start))
 
-
 def plot_static(): 
     data = pd.read_csv(PATH_DATAFILE)
     try:
@@ -794,10 +818,79 @@ def plot_static():
     static_plot_subplot3.set_xlabel("Time (sec)")
     static_plot_subplot3.set_ylabel("Acceleration (G)")
 
+
+def animate_live_table(i):
+    data = pd.read_csv(PATH_LIVEDATA)
+    max_alt = max(data['Altitude'])
+    max_alt_ind = np.where(data['Altitude'] == max_alt)
+    max_vel = max(data['Velocity'])
+    max_vel_ind = np.where(data['Velocity'] == max_vel)
+    lat = max(data['Latitude'])
+    lon = max(data['Longitude'])
+    accel = np.zeros(len(data['Time']))
+    data_table = None
+
+    data_table = [[max_vel, round(data['Time'][max_vel_ind[0][0]],2)], [max_alt, round(data['Time'][max_alt_ind[0][0]],2)],
+        [lat, round(data['Time'][len(data['Time'])-1],2)], 
+        [lon, round(data['Time'][len(data['Time'])-1],2)]]
+    
+    useful_params = None
+    useful_params = pd.DataFrame(data_table, index = ['Max Velocity [m/s]', 'Apogee [m]', 'Current Latitude', 'Current Longitude'], columns = ['Value', 'Time [s]'])
+
+    live_table_subplot.clear()
+
+    #The Table
+    live_table.patch.set_visible(False)
+    live_table_subplot.axis('off')
+    live_table_subplot.table(cellText=useful_params.values, colLabels=useful_params.columns, rowLabels=useful_params.index, loc='center')
+    live_table.tight_layout()
+
+    ### Generating Live Data. COMMENT OUT WHEN ACTUALLY READING LIVE DATA ###
+
+    data = pd.read_csv(PATH_LIVEDATA)
+    data_total = pd.read_csv(PATH_HISTDATA)
+    s = np.size(data['Time'])
+
+    vel = data_total['Velocity'][(s*10)-1]
+    alt = data_total['Altitude'][(s*10)-1]
+    time = data_total['Time'][(s*10)-1]
+    lat = rng.integers(low=0, high=1000, size=1)
+    lat = lat[0]
+    lon = rng.integers(low=0, high=1000, size=1)
+    lon = lon[0]
+
+    os.remove(PATH_LIVEDATA)
+    new_data = pd.DataFrame(
+        {
+            "Time": [time],
+            "Altitude": [alt],
+            "Velocity": [vel],
+            "Latitude": [lat],
+            "Longitude": [lon],
+        })
+    data = pd.concat([data, new_data])
+    data.to_csv(PATH_LIVEDATA)
+    ### END generating live data ###
+    print('ran')
+
+def plot_static(): 
+    data = pd.read_csv(PATH_DATAFILE)
+    data.drop(["Events"], axis=1)
+   
+    static_plot_subplot1.clear()
+    static_plot_subplot2.clear()
+    static_plot_subplot3.clear()
+    static_plot_subplot4.clear()
+    static_plot_subplot1.plot(data['Time'], data['Altitude'], color='k')
+    static_plot.subplots_adjust(hspace = 0.3)
+    static_plot_subplot2.plot(data['Time'], data['Velocity'], color='r')
+    static_plot_subplot1.set_xlabel("Time (sec)")
+    static_plot_subplot1.set_ylabel("AGL Altitude (ft)")
+    static_plot_subplot2.set_xlabel("Time (sec)")
+    static_plot_subplot2.set_ylabel("Velocity (ft/s)")
     static_plot_subplot4.set_xlabel("Longitude (deg)")
     static_plot_subplot4.set_ylabel("Latitude (deg)")
 
-# Select a flight data file to read
 def select_file():
     global PATH_DATAFILE
     PATH_DATAFILE = askopenfilename()
@@ -847,7 +940,9 @@ def main():
     app.tk.call('wm','iconphoto',app._w,tk.Image("photo", file=filepath_icon_photo))
 
 
-    ani = animation.FuncAnimation(live_plot, animate_live_plot, interval=1000)
+    ani = animation.FuncAnimation(live_plot, animate_live_plot, interval=500)
+    ani2 = animation.FuncAnimation(live_table, animate_live_table, interval=500)
+
    
     app.mainloop()
 ### MAIN END ###
