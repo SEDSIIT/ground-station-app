@@ -265,7 +265,7 @@ class FCSettings(tk.Frame):
         testing = ttk.Frame(notebook)
         
         notebook.add(recovery, text="Recovery")
-        notebook.add(auxPyro, text="Aux Pyro")
+        notebook.add(auxPyro, text="Auxiliary Pyro")
         notebook.add(telemetryConfig, text="Telemetry Config")
         notebook.add(calibration, text="Calibration")
         notebook.add(data, text="Data")
