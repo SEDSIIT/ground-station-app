@@ -23,6 +23,7 @@ For latest tasks go to: https://github.com/SEDSIIT/ground-station-app/projects/1
 ### IMPORT START ###
 import matplotlib
 from matplotlib import image
+from sympy import expand
 matplotlib.use("TkAgg")
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.figure import Figure
@@ -31,7 +32,7 @@ from matplotlib import style
 
 
 import tkinter as tk
-from tkinter import TOP, Entry, Label, StringVar, ttk
+from tkinter import Entry, Label, StringVar, ttk
 from tkinter.filedialog import askopenfilename, asksaveasfilename
 import tkinter.font as tkFont
 
@@ -43,6 +44,7 @@ import shutil
 import time
 import threading
 import pandas as pd
+import numpy as np
 
 import settings
 ### IMPORT END ###
@@ -51,20 +53,23 @@ import settings
 LARGE_FONT = ("Verdona", 12)
 style.use("ggplot")
 
-live_plot = Figure(figsize=(5,5), dpi=100)
+live_plot = Figure(figsize=(5,10), dpi=100)
 live_plot_subplot1 = live_plot.add_subplot(221)
 live_plot_subplot2 = live_plot.add_subplot(222)
 live_plot_subplot3 = live_plot.add_subplot(223)
 live_plot_subplot4 = live_plot.add_subplot(224)
 
-live_table = Figure(figsize=(5,5), dpi = 100)
+live_table = Figure(figsize=(5,2), dpi=100)
 live_table_subplot = live_table.add_subplot(111)
 
-static_plot = Figure(figsize=(5,5), dpi=100)
+static_plot = Figure(figsize=(5,10), dpi=100)
 static_plot_subplot1 = static_plot.add_subplot(221)
 static_plot_subplot2 = static_plot.add_subplot(222)
 static_plot_subplot3 = static_plot.add_subplot(223)
 static_plot_subplot4 = static_plot.add_subplot(224)
+
+static_table = Figure(figsize=(5,2), dpi=100)
+static_table_subplot = static_table.add_subplot(111)
 
 ### STYLING END ###
 
@@ -81,20 +86,10 @@ else:
     quit()
   
 PATH_LIVEDATA = os.path.join(PATH, 'data', 'temp', 'telemetry_temp.csv') # location of telemetry data
+#PATH_LIVEDATA = os.path.join(PATH, 'data', 'test_flight.csv') # plot sample data (Note: also comment out telemetry_file_int in main())
 PATH_DATAFILE = PATH_LIVEDATA
 
-## For generating live data sim, comment out when not needed ##
-PATH_HISTDATA = os.path.join(PATH, 'data', 'example_data.csv')
-
 CURRENT_PAGE = "HomePage"
-
-### For Simulation Live Data Read. Comment out when reading actual live data ###
-data = [[0,0,0,0,0]]
-ex_livedata = pd.DataFrame(data, columns = ['Time', 'Altitude', 'Velocity', 'Latitude', 'Longitude'])
-ex_livedata.to_csv(PATH_LIVEDATA)
-rng = np.random.default_rng(seed=31)
-### End Live Data Simulation ###
-
 
 ### GLOBAL VARIABLES END ###
 
@@ -211,45 +206,50 @@ class Settings(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         label = ttk.Label(self, text="Settings", font=LARGE_FONT)
-        label.grid(column=1, row=0)
-
-        
+        label.pack()    
         
         homeButton = ttk.Button(self, text="Home",
                     command=lambda: controller.show_frame(HomePage))
-        homeButton.grid(column=1,row=1)
-        
+        homeButton.pack()
 
 
 class DataAnalysis(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        label = ttk.Label(self, text="Data Analysis", font=LARGE_FONT)
-        label.pack(pady=10, padx=10)
-
-        button_file_select = ttk.Button(self, text="Home",
-                                    command=lambda: controller.show_frame(HomePage))
-        button_file_select.pack(side=TOP)
-
-        # static plot
-        #canvas = FigureCanvasTkAgg(static_plot, self)
-        #canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-        #canvas.draw()
+        tk.Grid.rowconfigure(self, (0,5), weight=1) 
+        tk.Grid.columnconfigure(self, (0,4), weight=1) 
         
+        label = ttk.Label(self, text="Data Analysis", font=LARGE_FONT)
+        label.grid(column=2,row=0, sticky=tk.N)
+        
+        button_home = ttk.Button(self, text="Home",
+                                    command=lambda: controller.show_frame(HomePage))
+        button_home.grid(column=1,row=1)
 
-        #toolbar = NavigationToolbar2Tk(canvas, self)
-        #toolbar.update()
-        #canvas._tkcanvas.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
-
-        # Live plot
-        canvas = FigureCanvasTkAgg(live_table, self)
+        button_file_select = ttk.Button(self, text="Open File",
+                                    command=lambda: select_file())
+        button_file_select.grid(column=3, row=1)
+        
+        # static plot
+        canvas = FigureCanvasTkAgg(static_plot, self)
+        canvas.get_tk_widget().grid(column=0, row=5, columnspan=5, rowspan=1, sticky="NSEW")
         canvas.draw()
-        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-
-        toolbar = NavigationToolbar2Tk(canvas,self)
+        
+        toolbarFrame = tk.Frame(self)
+        toolbarFrame.grid(column=0, row=4, columnspan=5, sticky=tk.W)
+        toolbar = NavigationToolbar2Tk(canvas, toolbarFrame)
         toolbar.update()
-        canvas._tkcanvas.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
-
+        
+        # Static table
+        canvas2 = FigureCanvasTkAgg(static_table, self)
+        canvas2.get_tk_widget().grid(column=0, row=3, columnspan=5, rowspan=1, sticky="NSEW")
+        canvas2.draw()
+        
+        toolbarFrame2 = tk.Frame(self)
+        toolbarFrame2.grid(column=0, row=2, columnspan=5, sticky=tk.W)
+        toolbar2 = NavigationToolbar2Tk(canvas2, toolbarFrame2)
+        toolbar2.update()
+        
 
 
 class FCSettings(tk.Frame):
@@ -682,53 +682,46 @@ class FCSettings(tk.Frame):
 class Telemetry(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        label = ttk.Label(self, text="Telemetry Data", font=LARGE_FONT)
-        label.pack(pady=10, padx=10)
+        tk.Grid.rowconfigure(self, (0,5), weight=1) 
+        tk.Grid.columnconfigure(self, (0,4), weight=1) 
+        
+        label = ttk.Label(self, text="Telemetry", font=LARGE_FONT)
+        label.grid(column=2,row=0, sticky=tk.N)
+        
+        button_home = ttk.Button(self, text="Home",
+                                    command=lambda: controller.show_frame(HomePage))
+        button_home.grid(column=1,row=1)
 
-        button1 = ttk.Button(self, text="Home",
-                            command=lambda: controller.show_frame(HomePage))
-        button1.pack()
-
-        # Live Plot
+        button_file_select = ttk.Button(self, text="Save Flight",
+                                    command=lambda: save_file())
+        button_file_select.grid(column=3, row=1)
+        
+        # static plot
         canvas = FigureCanvasTkAgg(live_plot, self)
-        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        canvas.get_tk_widget().grid(column=0, row=5, columnspan=5, rowspan=1, sticky="NSEW")
         canvas.draw()
-
-        toolbar = NavigationToolbar2Tk(canvas,self)
+        
+        toolbarFrame = tk.Frame(self)
+        toolbarFrame.grid(column=0, row=4, columnspan=5, sticky=tk.W)
+        toolbar = NavigationToolbar2Tk(canvas, toolbarFrame)
         toolbar.update()
-        canvas._tkcanvas.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
+        
+        # Static table
+        canvas2 = FigureCanvasTkAgg(live_table, self)
+        canvas2.get_tk_widget().grid(column=0, row=3, columnspan=5, rowspan=1, sticky="NSEW")
+        canvas2.draw()
+        
+        toolbarFrame2 = tk.Frame(self)
+        toolbarFrame2.grid(column=0, row=2, columnspan=5, sticky=tk.W)
+        toolbar2 = NavigationToolbar2Tk(canvas2, toolbarFrame2)
+        toolbar2.update()
 # Individual Pages End
 ### CLASS END ###
 
 
 ### FUNCTION DEFINE START ###
-# Get window screen information to scale window properly
-def get_win_dimensions(root):
-    screen_width = root.winfo_screenwidth()
-    screen_height = root.winfo_screenheight()
-
-    window_width = int(screen_width * settings.window.scale_width)
-    window_height = int(screen_height * settings.window.scale_height)
-
-    window_dimensions = str(window_width) + "x" + str(window_height)
-    
-    if (settings.DEBUG.status == True):
-        print("Window Stats:")
-        print("screen width:", screen_width)
-        print("window width scale:", settings.window.scale_width)
-        print("window width:", window_width)
-        print("screen height:", screen_height)
-        print("window height scale:", settings.window.scale_height)
-        print("window height:", window_height)
-        print("window dimensions:", window_dimensions)
-        print()
-
-    return window_dimensions
-
 # Used to animate a matplotlib figure
 def animate_live_plot(i):
-
-=======
     if (CURRENT_PAGE == "Telemetry"): # To do: add additional statement to require new data to update plot
         if (settings.DEBUG.status == True):
             start = time.time()
@@ -748,7 +741,7 @@ def animate_live_plot(i):
 
         live_plot.subplots_adjust(hspace = 0.3)
 
-        # Multi-threading start (Note: this takes longer than a single thread)
+        # Multi-threading start
 
         def plot_altitude():
             live_plot_subplot1.clear()
@@ -784,14 +777,71 @@ def animate_live_plot(i):
         t3.start()
         t4.start()
 
-        t1.join()
-        t2.join()
-        t3.join()
-        t4.join()
-
         if (settings.DEBUG.status == True):
             data_plot_stop = time.time()
             print("Plot Time: %f sec\n" %(data_plot_stop-start))
+
+
+def animate_live_table(i):
+    if (CURRENT_PAGE == "Telemetry"): # To Do: add additional statement to require new data flag
+        data = pd.read_csv(PATH_LIVEDATA)
+
+        try:
+            max_altitude = max(data['Altitude'])
+            max_altitude_index = np.where(data['Altitude'] == max_altitude)
+        except:
+            max_altitude = 0
+            max_altitude_index = 0
+            if (settings.DEBUG.status == True):
+                print("WARNING: Could not find max altitude!")
+            return None
+        
+        try:
+            max_velocity = max(data['Velocity'])
+            max_velocity_index = np.where(data['Velocity'] == max_velocity)
+        except:
+            max_velocity = 0
+            max_velocity_index = 0
+            if (settings.DEBUG.status == True):
+                print("WARNING: Could not find max velocity!")
+            return None
+
+        try:
+            max_acceleration = max(data['Acceleration'])
+            max_acceleration_index = np.where(data['Acceleration'] == max_acceleration)
+        except:
+            max_acceleration = 0
+            max_acceleration_index = 0
+            if (settings.DEBUG.status == True):
+                print("Warning: Could not find max acceleration!")
+            return None
+        try:
+            data_length = len(data["Latitude"]) - 1
+            latitude = data['Latitude'][data_length]
+            longitude = data['Longitude'][data_length]
+        except:
+            latitude = 0
+            longitude = 0
+            if (settings.DEBUG.status == True):
+                print("Warning: Could not find coordinates!")
+            return None
+        
+        data_table = [[max_velocity, round(data['Time'][max_velocity_index[0][0]],2)],
+                        [max_altitude, round(data['Time'][max_altitude_index[0][0]],2)],
+                        [latitude, round(data['Time'][len(data['Time'])-1],2)], 
+                        [longitude, round(data['Time'][len(data['Time'])-1],2)]]
+        
+        
+        useful_params = pd.DataFrame(data_table, index = ['Max Velocity [m/s]', 'Apogee [m]', 'Current Latitude', 'Current Longitude'], columns = ['Value', 'Time [s]'])
+
+        live_table_subplot.clear()
+
+        # Table parameters
+        live_table.patch.set_visible(False)
+        live_table_subplot.axis('off')
+        live_table_subplot.table(cellText=useful_params.values, colLabels=useful_params.columns, rowLabels=useful_params.index, loc='center')
+        live_table.tight_layout()
+
 
 def plot_static(): 
     data = pd.read_csv(PATH_DATAFILE)
@@ -811,94 +861,128 @@ def plot_static():
     static_plot_subplot1.set_xlabel("Time (sec)")
     static_plot_subplot1.set_ylabel("AGL Altitude (ft)")
     
-    static_plot_subplot2.plot(data['Time'], data['Velocity'], color='r')
+    static_plot_subplot2.plot(data['Time'], data['Velocity'], color='k')
     static_plot_subplot2.set_xlabel("Time (sec)")
     static_plot_subplot2.set_ylabel("Velocity (ft/s)")
     
+    static_plot_subplot3.plot(data['Time'], data['Acceleration'], color='k')
     static_plot_subplot3.set_xlabel("Time (sec)")
     static_plot_subplot3.set_ylabel("Acceleration (G)")
 
+    static_plot_subplot4.plot(data['Latitude'], data['Longitude'], color='k')
+    static_plot_subplot4.set_xlabel("Longitude (deg)")
+    static_plot_subplot4.set_ylabel("Latitude (deg)")
 
-def animate_live_table(i):
-    data = pd.read_csv(PATH_LIVEDATA)
-    max_alt = max(data['Altitude'])
-    max_alt_ind = np.where(data['Altitude'] == max_alt)
-    max_vel = max(data['Velocity'])
-    max_vel_ind = np.where(data['Velocity'] == max_vel)
-    lat = max(data['Latitude'])
-    lon = max(data['Longitude'])
-    accel = np.zeros(len(data['Time']))
+def table_static():
+    data = pd.read_csv(PATH_DATAFILE)
+    try:
+        data.drop(["Events"], axis=1)
+    except:
+        if (settings.DEBUG.status == True):
+            print("WARNING: No 'Events' in data file")
+    
+    try:
+        max_altitude = max(data['Altitude'])
+        max_altitude_index = np.where(data['Altitude'] == max_altitude)
+    except:
+        max_altitude = 0
+        max_altitude_index = 0
+        if (settings.DEBUG.status == True):
+            print("WARNING: Could not find max altitude!")
+    
+    try:
+        max_velocity = max(data['Velocity'])
+        max_velocity_index = np.where(data['Velocity'] == max_velocity)
+    except:
+        max_velocity = 0
+        max_velocity_index = 0
+        if (settings.DEBUG.status == True):
+            print("WARNING: Could not find max velocity!")
+
+    try:
+        max_acceleration = max(data['Acceleration'])
+        max_acceleration_index = np.where(data['Acceleration'] == max_acceleration)
+    except:
+        max_acceleration = 0
+        max_acceleration_index = 0
+        if (settings.DEBUG.status == True):
+            print("Warning: Could not find max acceleration!")
+
+    try:
+        data_length = len(data["Latitude"]) - 1
+        latitude = data['Latitude'][data_length]
+        longitude = data['Longitude'][data_length]
+    except:
+        latitude = 0
+        longitude = 0
+        if (settings.DEBUG.status == True):
+            print("Warning: Could not find coordinates!")
+    
     data_table = None
-
-    data_table = [[max_vel, round(data['Time'][max_vel_ind[0][0]],2)], [max_alt, round(data['Time'][max_alt_ind[0][0]],2)],
-        [lat, round(data['Time'][len(data['Time'])-1],2)], 
-        [lon, round(data['Time'][len(data['Time'])-1],2)]]
+    data_table = [[max_velocity, round(data['Time'][max_velocity_index[0][0]],2)], [max_altitude, round(data['Time'][max_altitude_index[0][0]],2)],
+        [latitude, round(data['Time'][len(data['Time'])-1],2)], 
+        [longitude, round(data['Time'][len(data['Time'])-1],2)]]
     
     useful_params = None
     useful_params = pd.DataFrame(data_table, index = ['Max Velocity [m/s]', 'Apogee [m]', 'Current Latitude', 'Current Longitude'], columns = ['Value', 'Time [s]'])
 
-    live_table_subplot.clear()
+    static_table_subplot.clear()
 
-    #The Table
-    live_table.patch.set_visible(False)
-    live_table_subplot.axis('off')
-    live_table_subplot.table(cellText=useful_params.values, colLabels=useful_params.columns, rowLabels=useful_params.index, loc='center')
-    live_table.tight_layout()
+    # table parameters
+    static_table.patch.set_visible(False)
+    static_table_subplot.axis('off')
+    static_table_subplot.table(cellText=useful_params.values, colLabels=useful_params.columns, rowLabels=useful_params.index, loc='center')
+    static_table.tight_layout()
 
-    ### Generating Live Data. COMMENT OUT WHEN ACTUALLY READING LIVE DATA ###
+# Get window screen information to scale window properly
+def get_win_dimensions(root):
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
 
-    data = pd.read_csv(PATH_LIVEDATA)
-    data_total = pd.read_csv(PATH_HISTDATA)
-    s = np.size(data['Time'])
+    window_width = int(screen_width * settings.window.scale_width)
+    window_height = int(screen_height * settings.window.scale_height)
 
-    vel = data_total['Velocity'][(s*10)-1]
-    alt = data_total['Altitude'][(s*10)-1]
-    time = data_total['Time'][(s*10)-1]
-    lat = rng.integers(low=0, high=1000, size=1)
-    lat = lat[0]
-    lon = rng.integers(low=0, high=1000, size=1)
-    lon = lon[0]
+    window_dimensions = str(window_width) + "x" + str(window_height)
+    
+    if (settings.DEBUG.status == True):
+        print("Window Stats:")
+        print("screen width:", screen_width)
+        print("window width scale:", settings.window.scale_width)
+        print("window width:", window_width)
+        print("screen height:", screen_height)
+        print("window height scale:", settings.window.scale_height)
+        print("window height:", window_height)
+        print("window dimensions:", window_dimensions)
+        print()
 
-    os.remove(PATH_LIVEDATA)
-    new_data = pd.DataFrame(
-        {
-            "Time": [time],
-            "Altitude": [alt],
-            "Velocity": [vel],
-            "Latitude": [lat],
-            "Longitude": [lon],
-        })
-    data = pd.concat([data, new_data])
-    data.to_csv(PATH_LIVEDATA)
-    ### END generating live data ###
-    print('ran')
+    return window_dimensions
+    
+# Resizes window to force window update for "DataAnalysis" page
+def refresh():
+    screen_height = app.winfo_height()
+    screen_width = app.winfo_width()
 
-def plot_static(): 
-    data = pd.read_csv(PATH_DATAFILE)
-    data.drop(["Events"], axis=1)
-   
-    static_plot_subplot1.clear()
-    static_plot_subplot2.clear()
-    static_plot_subplot3.clear()
-    static_plot_subplot4.clear()
-    static_plot_subplot1.plot(data['Time'], data['Altitude'], color='k')
-    static_plot.subplots_adjust(hspace = 0.3)
-    static_plot_subplot2.plot(data['Time'], data['Velocity'], color='r')
-    static_plot_subplot1.set_xlabel("Time (sec)")
-    static_plot_subplot1.set_ylabel("AGL Altitude (ft)")
-    static_plot_subplot2.set_xlabel("Time (sec)")
-    static_plot_subplot2.set_ylabel("Velocity (ft/s)")
-    static_plot_subplot4.set_xlabel("Longitude (deg)")
-    static_plot_subplot4.set_ylabel("Latitude (deg)")
+    geometry_string = str(screen_width + 10) + "x" + str(screen_height + 10)
+    app.geometry(geometry_string)
 
+    if (settings.DEBUG.status == True):
+        print("Refreshing window...")
+    
 def select_file():
     global PATH_DATAFILE
-    PATH_DATAFILE = askopenfilename()
+    try:
+        temp_file_path = askopenfilename()
+    except:
+        print("Warning: file path not valid: %s " %(temp_file_path))
+        return None
+    PATH_DATAFILE = temp_file_path
     if (settings.DEBUG.status == True):
         print("Selected data file path: %s" % (PATH_DATAFILE))
     #GSApp.show_frame(DataAnalysis) 
     plot_static()
-    
+    table_static()
+    refresh()
+
 # Saves temporary telemetry flight data file and saves it in a specified location
 def save_file(): 
     global PATH_LIVEDATA, PATH_DATAFILE
@@ -921,29 +1005,32 @@ def telemetry_file_init():
     if (settings.DEBUG.status == True):
         print("Clearing temp file: %s" %(PATH_LIVEDATA))
 
-
 ### MAIN START ###
 def main():
     ### SETUP START ###
     if (settings.DEBUG.status == True):
-        print("Starting ground station GUI...")
-        print()
-    ### SETUP END ###
+        print("Starting ground station GUI...\n")
+    
     telemetry_file_init()
+    ### SETUP END ###
 
+    global app 
     app = GSApp()
     app.geometry(get_win_dimensions(app))
     app.minsize(600,400)
     app.title("Ground Station Application")
 
-    filepath_icon_photo = os.path.join(PATH, 'images', 'SEDSIIT-logo.png')
-    app.tk.call('wm','iconphoto',app._w,tk.Image("photo", file=filepath_icon_photo))
-
+    if (PLATFORM == "windows"):
+        filepath_icon_photo = os.path.join(PATH, 'images', 'SEDSIIT-logo_icon.ico')
+        app.iconbitmap(filepath_icon_photo)
+    else:
+        filepath_icon_photo = os.path.join(PATH, 'images', 'SEDSIIT-logo.png')
+        app.tk.call('wm','iconphoto',app._w,tk.Image("photo", file=filepath_icon_photo))
+    #app.tk.call('wm','iconphoto',app._w,tk.Image("photo", file=filepath_icon_photo))
 
     ani = animation.FuncAnimation(live_plot, animate_live_plot, interval=500)
     ani2 = animation.FuncAnimation(live_table, animate_live_table, interval=500)
 
-   
     app.mainloop()
 ### MAIN END ###
 ### FUNCTION DEFINE END ###
