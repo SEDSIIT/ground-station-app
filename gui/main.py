@@ -93,7 +93,7 @@ PATH_DATAFILE = os.path.join(PATH, 'data', 'Init.csv')
 PATH_LIVEDATA = os.path.join(PATH, 'data', 'LiveData.csv') # placeholder
 
 ## For generating live data sim, comment out when not needed ##
-PATH_HISTDATA = os.path.join(PATH, 'data', 'example_data.csv')
+PATH_HISTDATA = os.path.join(PATH, 'data', 'example_flight.csv')
 
 ### For Simulation Live Data Read. Comment out when reading actual live data ###
 data = [[0,0,0,0,0]]
@@ -923,8 +923,8 @@ def main():
     app.tk.call('wm','iconphoto',app._w,tk.Image("photo", file=filepath_icon_photo))
 
     
-    #ani = animation.FuncAnimation(live_plot, animate_live_plot, interval=500)
-    #ani2 = animation.FuncAnimation(live_table, animate_live_table, interval=500)
+    ani = animation.FuncAnimation(live_plot, animate_live_plot, interval=500)
+    ani2 = animation.FuncAnimation(live_table, animate_live_table, interval=500)
    
     app.mainloop()
 ### MAIN END ###
