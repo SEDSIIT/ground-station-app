@@ -313,7 +313,7 @@ class Settings(tk.Frame):
             ser = Serial.Serial(comport, 115200)
             readOnlyText.insert(1.0, "************************\n")
             readOnlyText.insert(1.0, "WRITE TEST: WRITING DATA TO FLIGHT COMPUTER: \n")
-            send = "Sent data NOT "
+            send = "WROTE DATA SUCCESSFULLY! NOT "
             for i in range(5):
                 ser.write( send.encode())
                 data = ser.readline(1000)
