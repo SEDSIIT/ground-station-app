@@ -27,6 +27,7 @@ TO DO:
 from dataclasses import dataclass
 from distutils import command
 from faulthandler import disable
+from glob import glob
 import string
 from turtle import width
 import matplotlib
@@ -91,6 +92,7 @@ else:
     
 PATH_DATAFILE = os.path.join(PATH, 'data', 'Init.csv')
 PATH_LIVEDATA = os.path.join(PATH, 'data', 'LiveData.csv') # placeholder
+PATH_FSC = os.path.join(PATH, 'data', 'FSConfig_Saved.csv')
 
 ## For generating live data sim, comment out when not needed ##
 PATH_HISTDATA = os.path.join(PATH, 'data', 'example_flight.csv')
@@ -239,9 +241,10 @@ class FCSettings(tk.Frame):
     def DeleteWarningMessageBoxPopup():
         tk.messagebox.showwarning("*Warning", "This will delete ALL DATA ON THE FLIGHT COMPUTER.\nAre you sure you want to delete all data?")
     
-    def TestingPageWarningMessageBoxPopup(idx):
+    def TestingPageWarningMessageBoxPopup(idx, m):
         if (idx == 6):
-            tk.messagebox.showwarning("*Warning", "USE CAREFULLY! (placeholder warning)")
+            tk.messagebox.showwarning("*Warning", "USE CAREFULLY! Test Pyro {}".format(m))
+            switchbuttonstatus(m)
         else:
             pass
     def __init__(self, parent, controller):
@@ -267,6 +270,13 @@ class FCSettings(tk.Frame):
             serialBuadRateClicked.get(),channelEntryBox.get(),transmitFlightRateClicked.get(),transmitLandingRateClicked.get(),callsignEntryBox.get(),
             dataSaveRateClicked.get(), buzzerFreqencyEntryBox.get(),buzzerBeepPatternClicked.get()))
         savebutton.pack()
+
+        opensettingsbutton = ttk.Button(self, text="Open FC Settings", command=lambda: openflightsettingsfile(drogueDeployDelayEntryBox,
+            mainDeploymentAltitudeEntryBox, pyroIgnitionTimeClicked,self.auxPyroC_EnablePyroCheckboxValue,auxPyroC_Clicked,self.auxPyroC_DelayAfterFlagCheckBoxValue, 
+            self.auxPyroD_EnablePyroCheckboxValue,auxPyroD_Clicked, self.auxPyroD_DelayAfterFlagCheckBoxValue,self.auxPyroE_EnablePyroCheckboxValue,auxPyroE_Clicked,
+            self.auxPyroE_DelayAfterFlagCheckBoxValue, self.auxPyroF_EnablePyroCheckboxValue,auxPyroF_Clicked,self.auxPyroF_DelayAfterFlagCheckBoxValue,transmitPowerClicked,
+            serialBuadRateClicked,channelEntryBox,transmitFlightRateClicked,transmitLandingRateClicked,callsignEntryBox, dataSaveRateClicked, buzzerFreqencyEntryBox,buzzerBeepPatternClicked))
+        opensettingsbutton.pack()
         
         # Flight control settings body        
         notebook = ttk.Notebook(self) 
@@ -290,7 +300,8 @@ class FCSettings(tk.Frame):
         
         #TODO: Fix the issue of no warning on testing tab when it is selected
         idx = notebook.index(notebook.select())
-        notebook.bind('<<NotebookTabChanged>>', FCSettings.TestingPageWarningMessageBoxPopup(idx))
+        pyrolabel = []
+        notebook.bind('<<NotebookTabChanged>>', FCSettings.TestingPageWarningMessageBoxPopup(idx, pyrolabel))
         
         # Recovery frame <<<START>>>:
         #Drogue Deploy Delay
@@ -306,6 +317,7 @@ class FCSettings(tk.Frame):
         #TODO: add stutus label for main deployment altitude
         
         #Pyro igniton time
+        global pyroIgnitionTimeOptions
         pyroIgnitionTimeOptions = [ "NULL",
                                     "0.5 seconds",
                                     "1.0 seconds",
@@ -374,6 +386,7 @@ class FCSettings(tk.Frame):
         auxPyroE_DelayAfterFlagCheckBox = ttk.Checkbutton(auxPyro, variable=self.auxPyroE_DelayAfterFlagCheckBoxValue)
         auxPyroF_DelayAfterFlagCheckBox = ttk.Checkbutton(auxPyro, variable=self.auxPyroF_DelayAfterFlagCheckBoxValue)
 
+        global auxPryoDeployPositions
         auxPryoDeployPositions = [  "NULL",
                                     "BECO",
                                     "Stage",
@@ -438,6 +451,7 @@ class FCSettings(tk.Frame):
         
         #TELEMETRY CONFIG: Frame <<<START>>>:
         transmitPowerLabel = ttk.Label(telemetryConfig, text="Transmit Power: ")
+        global transmitPowerOptions
         transmitPowerOptions = ["NULL",
                                 "-1 dBm", 
                                 "2 dBm",
@@ -453,6 +467,7 @@ class FCSettings(tk.Frame):
         transmitPowerDropdown = ttk.OptionMenu(telemetryConfig, transmitPowerClicked, *transmitPowerOptions)
         
         serialBuadRateLabel = ttk.Label(telemetryConfig, text="Serial Buad Rate: ")
+        global serialBuadRateOptions
         serialBuadRateOptions = ["NULL", 
                                  "1200 bps", 
                                  "2400 bps", 
@@ -472,6 +487,7 @@ class FCSettings(tk.Frame):
         channelSetButton = ttk.Button(telemetryConfig, text="Set")
         
         transmitFlightRateLabel = ttk.Label(telemetryConfig, text="Flight Transmit Rate: ")
+        global transmitFlightRateOptions
         transmitFlightRateOptions = ["NULL", 
                                      "1 hz", 
                                      "2 hz", 
@@ -484,6 +500,7 @@ class FCSettings(tk.Frame):
         transmitFlightRateDropdown = ttk.OptionMenu(telemetryConfig, transmitFlightRateClicked, *transmitFlightRateOptions)
         
         transmitLandingRateLabel = ttk.Label(telemetryConfig, text="Landing Transmit Rate: ")
+        global transmitLandingRateOptions
         transmitLandingRateOptions = ["NULL", 
                                      "1 seconds", 
                                      "2 seconds", 
@@ -526,12 +543,28 @@ class FCSettings(tk.Frame):
         #<<<END>>> TELEMETRY CONFIG frame
         
         #CALIBRATION:: Frame <<<START>>>:
+        global button_status
+        button_status = {
+            "calibrateAccelerometerButton": 0,
+            "calibrateMagnetometerButton": 0,
+            "downloadDataButton": 0,
+            "dataDeleteButton": 0,
+            "enablePWN_Button": 0,
+            "enableBuzzer_Button": 0,
+            "testPyroAButton": 0,
+            "testPyroBButton": 0,
+            "testPyroCButton": 0,
+            "testPyroDButton": 0,
+            "testPyroEButton": 0,
+            "testPyroFButton": 0,
+
+        }
         calibrateAccelerometerLabel = ttk.Label(calibration, text="Calibrate Accelerometer: ")
-        calibrateAccelerometerButton = ttk.Button(calibration, text="RUN Calibrate")
+        calibrateAccelerometerButton = ttk.Button(calibration, text="RUN Calibrate", command=lambda m="calibrateAccelerometerButton": switchbuttonstatus(m))
         calibrateAccelerometerStatus = ttk.Label(calibration, text="Status: Null")
         
         calibrateMagnetometerLabel = ttk.Label(calibration, text="Calibrate Magnetometer: ")
-        calibrateMagnetometerButton = ttk.Button(calibration, text="RUN Calibrate")
+        calibrateMagnetometerButton = ttk.Button(calibration, text="RUN Calibrate", command=lambda m="calibrateMagnetometerButton": switchbuttonstatus(m))
         calibrateMagnetometerStatus = ttk.Label(calibration, text="Status: NULL")
         
         calibrateAccelerometerLabel.grid(row=0, column=0, sticky="w")
@@ -548,10 +581,11 @@ class FCSettings(tk.Frame):
         
         #DATA Frame <<<START>>>:
         downloadDataLabel = ttk.Label(data, text="Download Data: ")
-        downloadDataButton = ttk.Button(data, text="Download")
+        downloadDataButton = ttk.Button(data, text="Download", command=lambda m="downloadDataButton": switchbuttonstatus(m))
         downloadDataStatus = ttk.Label(data, text="Download Status: NULL")
         
         dataSaveRateLabel = ttk.Label(data, text="Data Save Rate: ")
+        global dataSaveRateOptions
         dataSaveRateOptions = ["NULL", 
                                "1 hz",
                                "5 hz", 
@@ -565,7 +599,7 @@ class FCSettings(tk.Frame):
         dataSaveRateDropdown = ttk.OptionMenu(data, dataSaveRateClicked, *dataSaveRateOptions)
         
         dataDeleteLabel = ttk.Label(data, text="Data Delete: ")
-        dataDeleteButton = ttk.Button(data, text="*Delete", command=lambda: [FCSettings.DeleteWarningMessageBoxPopup()])
+        dataDeleteButton = ttk.Button(data, text="*Delete", command=lambda m="dataDeleteButton": [FCSettings.DeleteWarningMessageBoxPopup(), switchbuttonstatus(m)])
         dataDeleteStatus = ttk.Label(data, text="Delete Status: NULL")
         
         downloadDataLabel.grid(row=0, column=0, sticky="w")
@@ -585,11 +619,11 @@ class FCSettings(tk.Frame):
         
         #Aux Frame <<<START>>>:
         enablePWM_Label = ttk.Label(aux, text="Enable PWM: ")
-        enablePWN_Button = ttk.Button(aux, text="Enable")
+        enablePWN_Button = ttk.Button(aux, text="Enable", command=lambda m="enablePWN_Button": switchbuttonstatus(m))
         enablePWN_Status = ttk.Label(aux, text="Status: NULL")
         
         enableBuzzer_Label = ttk.Label(aux, text="Enable Buzzer: ")
-        enableBuzzer_Button = ttk.Button(aux, text="Enable")
+        enableBuzzer_Button = ttk.Button(aux, text="Enable", command=lambda m="enableBuzzer_Button": switchbuttonstatus(m))
         enableBuzzer_Status = ttk.Label(aux, text="Status: NULL")
         
         buzzerFreqencyLabel = ttk.Label(aux, text="Buzzer Frequency (1800-2200): ")
@@ -597,6 +631,7 @@ class FCSettings(tk.Frame):
         buzzerFreqencyStatus = ttk.Label(aux, text="Status: NULL")
         
         buzzerBeepPatternLabel = ttk.Label(aux, text="Buzzer Beep Pattern: ")
+        global buzzerBeepPatternOptions
         buzzerBeepPatternOptions = ["NULL",
                              "1",
                              "2",
@@ -627,9 +662,29 @@ class FCSettings(tk.Frame):
         #<<<END>>> Aux frame
         
         #Aux Frame <<<START>>>:
-        testPyroLabel = ttk.Label(testing, text="*Test Pyro: ")
-        testPyroButton = ttk.Button(testing, text="WARNING*Test", command=lambda : [FCSettings.TestingPageWarningMessageBoxPopup(6)])
-        testPyroStatus = ttk.Label(testing, text="Status: NULL")
+        testPyroALabel = ttk.Label(testing, text="*Test Pyro A: ")
+        testPyroAButton = ttk.Button(testing, text="WARNING*Test", command=lambda m = "testPyroAButton": [FCSettings.TestingPageWarningMessageBoxPopup(6, m)])
+        testPyroAStatus = ttk.Label(testing, text="Status: NULL")
+
+        testPyroBLabel = ttk.Label(testing, text="*Test Pyro A: ")
+        testPyroBButton = ttk.Button(testing, text="WARNING*Test", command=lambda m = "testPyroBButton": [FCSettings.TestingPageWarningMessageBoxPopup(6, m)])
+        testPyroBStatus = ttk.Label(testing, text="Status: NULL")
+
+        testPyroCLabel = ttk.Label(testing, text="*Test Pyro A: ")
+        testPyroCButton = ttk.Button(testing, text="WARNING*Test", command=lambda m = "testPyroCButton": [FCSettings.TestingPageWarningMessageBoxPopup(6, m)])
+        testPyroCStatus = ttk.Label(testing, text="Status: NULL")
+
+        testPyroDLabel = ttk.Label(testing, text="*Test Pyro A: ")
+        testPyroDButton = ttk.Button(testing, text="WARNING*Test", command=lambda m = "testPyroDButton": [FCSettings.TestingPageWarningMessageBoxPopup(6, m)])
+        testPyroDStatus = ttk.Label(testing, text="Status: NULL")
+
+        testPyroELabel = ttk.Label(testing, text="*Test Pyro A: ")
+        testPyroEButton = ttk.Button(testing, text="WARNING*Test", command=lambda m = "testPyroEButton": [FCSettings.TestingPageWarningMessageBoxPopup(6, m)])
+        testPyroEStatus = ttk.Label(testing, text="Status: NULL")
+
+        testPyroFLabel = ttk.Label(testing, text="*Test Pyro A: ")
+        testPyroFButton = ttk.Button(testing, text="WARNING*Test", command=lambda m = "testPyroFButton": [FCSettings.TestingPageWarningMessageBoxPopup(6, m)])
+        testPyroFStatus = ttk.Label(testing, text="Status: NULL")
         
         testTelemetryLabel = ttk.Label(testing, text="Test Telemetry: ")
         testTelemetryButton = ttk.Button(testing, text="Test")
@@ -647,25 +702,45 @@ class FCSettings(tk.Frame):
         testAcclerometer2_Button = ttk.Button(testing, text="Test")
         testAcclerometer2_status = ttk.Label(testing, text="Status: NULL")
         
-        testPyroLabel.grid(row=0, column=0, sticky="w")
-        testPyroButton.grid(row=0, column=1, sticky="w")
-        testPyroStatus.grid(row=0, column=2, sticky="w")
+        testPyroALabel.grid(row=0, column=0, sticky="w")
+        testPyroAButton.grid(row=0, column=1, sticky="w")
+        testPyroAStatus.grid(row=0, column=2, sticky="w")
+
+        testPyroBLabel.grid(row=1, column=0, sticky="w")
+        testPyroBButton.grid(row=1, column=1, sticky="w")
+        testPyroBStatus.grid(row=1, column=2, sticky="w")
+
+        testPyroCLabel.grid(row=2, column=0, sticky="w")
+        testPyroCButton.grid(row=2, column=1, sticky="w")
+        testPyroCStatus.grid(row=2, column=2, sticky="w")
+
+        testPyroDLabel.grid(row=3, column=0, sticky="w")
+        testPyroDButton.grid(row=3, column=1, sticky="w")
+        testPyroDStatus.grid(row=3, column=2, sticky="w")
+
+        testPyroELabel.grid(row=4, column=0, sticky="w")
+        testPyroEButton.grid(row=4, column=1, sticky="w")
+        testPyroEStatus.grid(row=4, column=2, sticky="w")
+
+        testPyroFLabel.grid(row=5, column=0, sticky="w")
+        testPyroFButton.grid(row=5, column=1, sticky="w")
+        testPyroFStatus.grid(row=5, column=2, sticky="w")
         
-        testTelemetryLabel.grid(row=1, column=0, sticky="w")
-        testTelemetryButton.grid(row=1, column=1, sticky="w")
-        testTelemetryStatus.grid(row=1, column=2, sticky="w")
+        testTelemetryLabel.grid(row=6, column=0, sticky="w")
+        testTelemetryButton.grid(row=6, column=1, sticky="w")
+        testTelemetryStatus.grid(row=6, column=2, sticky="w")
         
-        testGPS_Label.grid(row=2, column=0, sticky="w")
-        testGPS_Button.grid(row=2, column=1, sticky="w")
-        testGPS_Status.grid(row=2, column=2, sticky="w")
+        testGPS_Label.grid(row=7, column=0, sticky="w")
+        testGPS_Button.grid(row=7, column=1, sticky="w")
+        testGPS_Status.grid(row=7, column=2, sticky="w")
         
-        testAcclerometer1_Label.grid(row=3, column=0, sticky="w")
-        testAcclerometer1_Button.grid(row=3, column=1, sticky="w")
-        testAcclerometer1_status.grid(row=3, column=2, sticky="w")
+        testAcclerometer1_Label.grid(row=8, column=0, sticky="w")
+        testAcclerometer1_Button.grid(row=8, column=1, sticky="w")
+        testAcclerometer1_status.grid(row=8, column=2, sticky="w")
         
-        testAcclerometer2_Label.grid(row=4, column=0, sticky="w")
-        testAcclerometer2_Button.grid(row=4, column=1, sticky="w")
-        testAcclerometer2_status.grid(row=4, column=2, sticky="w")
+        testAcclerometer2_Label.grid(row=9, column=0, sticky="w")
+        testAcclerometer2_Button.grid(row=9, column=1, sticky="w")
+        testAcclerometer2_status.grid(row=9, column=2, sticky="w")
 
         global saved_information
         saved_information = {
@@ -872,30 +947,35 @@ def saveflightcontrolsettings(drogueDeployDelayEntryBox, mainDeploymentAltitudeE
         transmitPowerClicked,serialBuadRateClicked,channelEntryBox,transmitFlightRateClicked,transmitLandingRateClicked,callsignEntryBox,\
         dataSaveRateClicked,buzzerFreqencyEntryBox,\
         buzzerBeepPatternClicked):
-        saved_information["drogueDeployDelay"] = drogueDeployDelayEntryBox
-        saved_information["mainDeploymentAltitude"] = mainDeploymentAltitudeEntryBox
-        saved_information["pyroIgnitionTime"] = pyroIgnitionTimeClicked
-        saved_information["auxPyroC"] = auxPyroC_EnablePyroCheckboxValue
-        saved_information["auxPyroC_DeployPosition"] =  auxPyroC_Clicked
-        saved_information["auxPyroC_DelayAfterFlag"] = auxPyroC_DelayAfterFlagCheckBoxValue
-        saved_information["auxPyroD"] = auxPyroD_EnablePyroCheckboxValue
-        saved_information["auxPyroD_DeployPosition"] = auxPyroD_Clicked
-        saved_information["auxPyroD_DelayAfterFlag"] = auxPyroD_DelayAfterFlagCheckBoxValue
-        saved_information["auxPyroE"] = auxPyroE_EnablePyroCheckboxValue
-        saved_information["auxPyroE_DeployPosition"] = auxPyroE_Clicked
-        saved_information["auxPyroE_DelayAfterFlag"] = auxPyroE_DelayAfterFlagCheckBoxValue
-        saved_information["auxPyroF"] = auxPyroF_EnablePyroCheckboxValue
-        saved_information["auxPyroF_DeployPosition"] = auxPyroF_Clicked
-        saved_information["auxPyroF_DelayAfterFlag"] = auxPyroF_DelayAfterFlagCheckBoxValue
-        saved_information["transmitPower"] = transmitPowerClicked
-        saved_information["serialBuadRate"] = serialBuadRateClicked
-        saved_information["channel"] = channelEntryBox
-        saved_information["transmitFlightRate"] = transmitFlightRateClicked
-        saved_information["transmitLandingRate"] = transmitLandingRateClicked
-        saved_information["callsignEntryBox"] = callsignEntryBox
-        saved_information["dataSaveRate"] = dataSaveRateClicked
-        saved_information["buzzerFreqency"] = buzzerFreqencyEntryBox
-        saved_information["buzzerBeepPatternClicked"] = buzzerBeepPatternClicked
+        saved_information["drogueDeployDelay"] = [drogueDeployDelayEntryBox]
+        saved_information["mainDeploymentAltitude"] = [mainDeploymentAltitudeEntryBox]
+        saved_information["pyroIgnitionTime"] = [pyroIgnitionTimeClicked]
+        saved_information["auxPyroC"] = [auxPyroC_EnablePyroCheckboxValue]
+        saved_information["auxPyroC_DeployPosition"] =  [auxPyroC_Clicked]
+        saved_information["auxPyroC_DelayAfterFlag"] = [auxPyroC_DelayAfterFlagCheckBoxValue]
+        saved_information["auxPyroD"] = [auxPyroD_EnablePyroCheckboxValue]
+        saved_information["auxPyroD_DeployPosition"] = [auxPyroD_Clicked]
+        saved_information["auxPyroD_DelayAfterFlag"] = [auxPyroD_DelayAfterFlagCheckBoxValue]
+        saved_information["auxPyroE"] = [auxPyroE_EnablePyroCheckboxValue]
+        saved_information["auxPyroE_DeployPosition"] = [auxPyroE_Clicked]
+        saved_information["auxPyroE_DelayAfterFlag"] = [auxPyroE_DelayAfterFlagCheckBoxValue]
+        saved_information["auxPyroF"] = [auxPyroF_EnablePyroCheckboxValue]
+        saved_information["auxPyroF_DeployPosition"] = [auxPyroF_Clicked]
+        saved_information["auxPyroF_DelayAfterFlag"] = [auxPyroF_DelayAfterFlagCheckBoxValue]
+        saved_information["transmitPower"] = [transmitPowerClicked]
+        saved_information["serialBuadRate"] = [serialBuadRateClicked]
+        saved_information["channel"] = [channelEntryBox]
+        saved_information["transmitFlightRate"] = [transmitFlightRateClicked]
+        saved_information["transmitLandingRate"] = [transmitLandingRateClicked]
+        saved_information["callsignEntryBox"] = [callsignEntryBox]
+        saved_information["dataSaveRate"] = [dataSaveRateClicked]
+        saved_information["buzzerFreqency"] = [buzzerFreqencyEntryBox]
+        saved_information["buzzerBeepPatternClicked"] = [buzzerBeepPatternClicked]
+
+        FSdf = pd.DataFrame.from_dict(saved_information)
+        FSdf.to_csv(PATH_FSC)
+
+        ### Add Code to send the information ###
         print('Flight Settings Saved')
 
 
@@ -904,7 +984,51 @@ def select_file():
     PATH_DATAFILE = askopenfilename()
     print("Selected data file path: %s" % (PATH_DATAFILE))
     plot_static()
+
+def openflightsettingsfile(drogueDeployDelayEntryBox, mainDeploymentAltitudeEntryBox, pyroIgnitionTimeClicked, auxPyroC_EnablePyroCheckboxValue,auxPyroC_Clicked,\
+    auxPyroC_DelayAfterFlagCheckBoxValue, auxPyroD_EnablePyroCheckboxValue,auxPyroD_Clicked, auxPyroD_DelayAfterFlagCheckBoxValue, auxPyroE_EnablePyroCheckboxValue,\
+    auxPyroE_Clicked,auxPyroE_DelayAfterFlagCheckBoxValue, auxPyroF_EnablePyroCheckboxValue,auxPyroF_Clicked, auxPyroF_DelayAfterFlagCheckBoxValue,transmitPowerClicked, \
+    serialBuadRateClicked,channelEntryBox,transmitFlightRateClicked,transmitLandingRateClicked,callsignEntryBox, dataSaveRateClicked, buzzerFreqencyEntryBox,\
+    buzzerBeepPatternClicked):
+    global PATH_FSC
+    PATH_FSC = askopenfilename()
+    print("Selected Flight Settings Configuation file path: %s" % (PATH_FSC))
+    global saved_information
+    saved_information = pd.read_csv(PATH_FSC)
+    saved_information.to_dict('dict')
+    del saved_information[saved_information.columns[0]]
+    drogueDeployDelayEntryBox.insert(0,saved_information["drogueDeployDelay"][0])
+    mainDeploymentAltitudeEntryBox.insert(0,saved_information["mainDeploymentAltitude"][0])
+    pyroIgnitionTimeClicked.set(pyroIgnitionTimeOptions[pyroIgnitionTimeOptions.index(saved_information["pyroIgnitionTime"][0])])
+    auxPyroC_EnablePyroCheckboxValue.set(saved_information["auxPyroC"][0])
+    auxPyroC_Clicked.set(auxPryoDeployPositions[auxPryoDeployPositions.index(saved_information["auxPyroC_DeployPosition"][0])])
+    auxPyroC_DelayAfterFlagCheckBoxValue.set(saved_information["auxPyroC_DelayAfterFlag"])
+    auxPyroD_EnablePyroCheckboxValue.set(saved_information["auxPyroD"][0])
+    auxPyroD_Clicked.set(auxPryoDeployPositions[auxPryoDeployPositions.index(saved_information["auxPyroD_DeployPosition"][0])])
+    auxPyroD_DelayAfterFlagCheckBoxValue.set(saved_information["auxPyroD_DelayAfterFlag"])
+    auxPyroE_EnablePyroCheckboxValue.set(saved_information["auxPyroE"][0])
+    auxPyroE_Clicked.set(auxPryoDeployPositions[auxPryoDeployPositions.index(saved_information["auxPyroE_DeployPosition"][0])])
+    auxPyroE_DelayAfterFlagCheckBoxValue.set(saved_information["auxPyroE_DelayAfterFlag"])
+    auxPyroF_EnablePyroCheckboxValue.set(saved_information["auxPyroF"][0])
+    auxPyroF_Clicked.set(auxPryoDeployPositions[auxPryoDeployPositions.index(saved_information["auxPyroF_DeployPosition"][0])])
+    auxPyroF_DelayAfterFlagCheckBoxValue.set(saved_information["auxPyroF_DelayAfterFlag"])
+    transmitPowerClicked.set(transmitPowerOptions[transmitPowerOptions.index(saved_information["transmitPower"][0])])
+    serialBuadRateClicked.set(serialBuadRateOptions[serialBuadRateOptions.index(saved_information["serialBuadRate"][0])])
+    channelEntryBox.insert(0,saved_information["channel"][0])
+    transmitFlightRateClicked.set(transmitFlightRateOptions[transmitFlightRateOptions.index(saved_information["transmitFlightRate"][0])])
+    transmitLandingRateClicked.set(transmitLandingRateOptions[transmitLandingRateOptions.index(saved_information["transmitLandingRate"][0])])
+    callsignEntryBox.insert(0,saved_information["callsignEntryBox"][0])
+    dataSaveRateClicked.set(dataSaveRateOptions[dataSaveRateOptions.index(saved_information["dataSaveRate"][0])])
+    buzzerFreqencyEntryBox.insert(0,saved_information["buzzerFreqency"][0])
+    buzzerBeepPatternClicked.set(buzzerBeepPatternOptions[buzzerBeepPatternOptions.index(str(saved_information["buzzerBeepPatternClicked"][0]))])
+
+    print('Settings Loaded')
     
+def switchbuttonstatus(m):
+    button_status[m] = 1
+    ### Send Button Information ###
+    button_status[m] = 0
+    print("Data Sent")
 
 ### MAIN START ###
 def main():
