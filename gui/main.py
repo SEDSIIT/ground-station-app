@@ -32,8 +32,12 @@ import string
 from turtle import width
 import matplotlib
 from matplotlib import image
+
 from paramiko import Channel
 from sqlalchemy import true
+
+from sympy import expand
+
 matplotlib.use("TkAgg")
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.figure import Figure
@@ -44,6 +48,7 @@ from matplotlib import pyplot as plt
 import tkinter as tk
 from tkinter import BOTH, DISABLED, TOP, Canvas, Entry, Label, PhotoImage, StringVar, ttk
 from tkinter.filedialog import askopenfilename
+
 import tkinter.font as tkFont
 
 from PIL import ImageTk, Image
@@ -54,6 +59,15 @@ import numpy as np
 import os
 import sys
 
+import shutil
+import time
+import threading
+import glob
+import serial as Serial
+import pandas as pd
+import numpy as np
+
+
 import settings
 ### IMPORT END ###
 
@@ -61,20 +75,23 @@ import settings
 LARGE_FONT = ("Verdona", 12)
 style.use("ggplot")
 
-live_plot = Figure(figsize=(5,5), dpi=100)
+live_plot = Figure(figsize=(5,10), dpi=100)
 live_plot_subplot1 = live_plot.add_subplot(221)
 live_plot_subplot2 = live_plot.add_subplot(222)
 live_plot_subplot3 = live_plot.add_subplot(223)
 live_plot_subplot4 = live_plot.add_subplot(224)
 
-live_table = Figure(figsize=(5,5), dpi = 100)
+live_table = Figure(figsize=(5,2), dpi=100)
 live_table_subplot = live_table.add_subplot(111)
 
-static_plot = Figure(figsize=(5,5), dpi=100)
+static_plot = Figure(figsize=(5,10), dpi=100)
 static_plot_subplot1 = static_plot.add_subplot(221)
 static_plot_subplot2 = static_plot.add_subplot(222)
 static_plot_subplot3 = static_plot.add_subplot(223)
 static_plot_subplot4 = static_plot.add_subplot(224)
+
+static_table = Figure(figsize=(5,2), dpi=100)
+static_table_subplot = static_table.add_subplot(111)
 
 ### STYLING END ###
 
@@ -89,6 +106,7 @@ elif sys.platform == "win32":
 else:
     print("WARNING: Unrecognized platform")
     quit()
+
     
 PATH_DATAFILE = os.path.join(PATH, 'data', 'Init.csv')
 PATH_LIVEDATA = os.path.join(PATH, 'data', 'LiveData.csv') # placeholder
@@ -103,6 +121,7 @@ ex_livedata = pd.DataFrame(data, columns = ['Time', 'Altitude', 'Velocity', 'Lat
 ex_livedata.to_csv(PATH_LIVEDATA)
 rng = np.random.default_rng(seed=31)
 ### End Live Data Simulation ###
+
 
 ### GLOBAL VARIABLES END ###
 
@@ -180,20 +199,28 @@ class HomePage(tk.Frame):
         label.place(relx=0.5, rely=0.1, anchor="n")
         
         # menu
-        button = ttk.Button(self, text="Data Analysis",
+
+        flightAnalysisButton = ttk.Button(self, text="Flight Analysis",
                             command=lambda: controller.show_frame(DataAnalysis))
-        button.pack()
-        button.place(relx=0.3, rely=0.2, anchor="n")
+        flightAnalysisButton.pack()
+        flightAnalysisButton.place(relx=0.2, rely=0.2, anchor="n")
 
-        button2 = ttk.Button(self, text="Flight Control Settings",
+
+        fcComputerConfigButton = ttk.Button(self, text="Flight Computer Configuration",
                             command=lambda: controller.show_frame(FCSettings))
-        button2.pack()
-        button2.place(relx=0.5, rely=0.2, anchor="n")
+        fcComputerConfigButton.pack()
+        fcComputerConfigButton.place(relx=0.4, rely=0.2, anchor="n")
 
-        button3 = ttk.Button(self, text="Live Flight Data",
-                            command=lambda: controller.show_frame(LiveFlight))
-        button3.pack()
-        button3.place(relx=0.7, rely=0.2, anchor="n")
+        
+        telemetryButton = ttk.Button(self, text="Telemetry",
+                            command=lambda: controller.show_frame(Telemetry))
+        telemetryButton.pack()
+        telemetryButton.place(relx=0.6, rely=0.2, anchor="n")
+        
+        settingsButton = ttk.Button(self, text="Settings",
+                            command=lambda: controller.show_frame(Settings))
+        settingsButton.pack()
+        settingsButton.place(relx=0.8, rely=0.2, anchor="n")
         
         # image
         filepath_logo_nobg = os.path.join(PATH, 'images', 'SEDSIIT-logo_noBG.png')
@@ -203,38 +230,184 @@ class HomePage(tk.Frame):
         img.image = render
         img.pack()
         img.place(relx=0.5, rely=0.3, anchor="n")
+
+class Settings(tk.Frame):
+    # This function creates and connects to the flight computer COM port 
+    # (SHOULD SUPPORT ALL PLATFORMS LINUX MAC AND WINDOWS)
+    def serial_ports_finder():
+        """ Lists serial port names
+
+            :raises EnvironmentError:
+                On unsupported or unknown platforms
+            :returns:
+                A list of the serial ports available on the system
+        """
+        if sys.platform.startswith('win'):
+            ports = ['COM%s' % (i + 1) for i in range(256)]
+        elif sys.platform.startswith('linux') or sys.platform.startswith('cygwin'):
+            # this excludes your current terminal "/dev/tty"
+            ports = glob.glob('/dev/tty[A-Za-z]*')
+        elif sys.platform.startswith('darwin'):
+            ports = glob.glob('/dev/tty.*')
+        else:
+            raise EnvironmentError('Unsupported platform')
+
+        result = []
+        for port in ports:
+            try:
+                s = Serial.Serial(port)
+                s.close()
+                result.append(port)
+            except (OSError, Serial.SerialException):
+                pass
+        return result
+    
+    
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        label = ttk.Label(self, text="Settings", font=LARGE_FONT)
+        label.pack()    
+        
+        homeButton = ttk.Button(self, text="Home",
+                    command=lambda: controller.show_frame(HomePage))
+        homeButton.pack()
+        
+        # Connection control body        
+        notebook = ttk.Notebook(self) 
+        
+        fcConnect = ttk.Frame(notebook)
+        nilConnect1 = ttk.Frame(notebook)
+        nilConnect2 = ttk.Frame(notebook)
+        nilConnect3 = ttk.Frame(notebook)
+        nilConnect4 = ttk.Frame(notebook)
+        nilConnect5 = ttk.Frame(notebook)
+        nilConnect6 = ttk.Frame(notebook)
+        nilConnect7 = ttk.Frame(notebook)
+        
+        notebook.add(fcConnect, text="FC Connect")
+        notebook.add(nilConnect1, text="nilConnect1")
+        notebook.add(nilConnect2, text="nilConnect2")
+        notebook.add(nilConnect3, text="nilConnect3")
+        #notebook.add(nilConnect4, text="nilConnect4")
+        #notebook.add(nilConnect5, text="nilConnect5")
+        #notebook.add(nilConnect6, text="nilConnect6")
+        #notebook.add(nilConnect6, text="nilConnect7")
+        notebook.pack(padx=16, pady=30)
         
 
+        # <<<fcConnect>>> START
+        fc_connections_label = ttk.Label(fcConnect, text="Flight Computer COMPORT: ")
+        fc_connections_options = Settings.serial_ports_finder() #setting up connection to FC
+        
+        fc_connect_button_clicked = StringVar()
+        
+        fc_connect_button_dropdown = ttk.OptionMenu(fcConnect, fc_connect_button_clicked, *fc_connections_options)
+        
+        set_connection_button_lable = ttk.Label(fcConnect, text="Set connection: ")
+        set_connection_button = ttk.Button(fcConnect, text="SET", command=lambda: fc_connection_set(fc_connect_button_clicked.get()))
+        
+        test_connection_button_lable = ttk.Label(fcConnect, text="READ connection: ")
+        test_connection_button = ttk.Button(fcConnect, text="READ", command=lambda: fc_connection_test_read(fc_connect_button_clicked.get()))
+        
+        write_connection_button_lable = ttk.Label(fcConnect, text="WRITE connection: ")
+        write_connection_button = ttk.Button(fcConnect, text="WRTIE", command=lambda: fc_connection_test_write(fc_connect_button_clicked.get()))
+        
+        clear_output_button = ttk.Button(fcConnect, text="CLEAR OUTPUT", command=lambda: readOnlyText.delete("1.0","end"))
+        
+        # <<<fcConnect>>> HELPER FUNCTION DEFS START
+        def fc_connection_set(comport):
+            ser = Serial.Serial(comport, 115200)
+            if not ser.isOpen():
+                ser.open()
+            readOnlyText.insert(1.0, comport + " is open and ready to go! \n")
+        
+        def fc_connection_test_read(comport):
+            ser = Serial.Serial(comport, 115200)
+            readOnlyText.insert(1.0, "************************\n")
+            readOnlyText.insert(1.0, "READ TEST: READING FROM FLIGHT COMPUTER: \n")
+            
+            for i in range(5):
+                data = ser.readline(1000)
+                readOnlyText.insert(1.0, data)
+            readOnlyText.insert(1.0, "SUCCESS!!\n")
+                
+        def fc_connection_test_write(comport):
+            ser = Serial.Serial(comport, 115200)
+            readOnlyText.insert(1.0, "************************\n")
+            readOnlyText.insert(1.0, "WRITE TEST: WRITING DATA TO FLIGHT COMPUTER: \n")
+            send = "WROTE DATA SUCCESSFULLY! NOT "
+            for i in range(5):
+                ser.write( send.encode())
+                data = ser.readline(1000)
+                readOnlyText.insert(1.0, data)
+            readOnlyText.insert(1.0, "SUCCESS!!\n")
+        
+        def readOnlyTextBox(event):
+            if(12==event.state and event.keysym=='c' ):
+                return
+            else:
+                return "break"
+        # <<<fcConnect>>> HELPER FUNCTION DEFS END
+        
+        
+        readOnlyText = tk.Text(fcConnect, width=90,height=50,font=('Time 15 bold'),fg="black")
+        readOnlyText.insert(1.0, "WAITING FOR CONNECTION TO BE SET!\n")
+        readOnlyText.bind("<Key>", lambda e: readOnlyTextBox(e)) #STOPS ALL KEYS FROM WORKING WITHIN TEXTBOX
+        
+        
+        fc_connections_label.grid(row=0, column=0, sticky="w")
+        fc_connect_button_dropdown.grid(row=0, column=1, sticky="w")
+        
+        set_connection_button_lable.grid(row=1, column=0, sticky="w")
+        set_connection_button.grid(row=1, column=1, sticky="w")
+    
+        test_connection_button_lable.grid(row=2, column=0,sticky="w")
+        test_connection_button.grid(row=2, column=1, sticky="w")
+        
+        write_connection_button_lable.grid(row=3, column=0,sticky="w")
+        write_connection_button.grid(row=3, column=1, sticky="w")
+        
+        clear_output_button.grid(row=4, column=1, sticky="w")
+        readOnlyText.grid(row = 5, column = 0, columnspan = 2, rowspan = 2, padx = 2, pady = 3)
+        # <<<fcConnect>>> END
 
 class DataAnalysis(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        label = ttk.Label(self, text="Data Analysis", font=LARGE_FONT)
-        label.pack(pady=10, padx=10)
-
-        button_file_select = ttk.Button(self, text="Home",
-                                    command=lambda: controller.show_frame(HomePage))
-        button_file_select.pack(side=TOP)
-
-        # static plot
-        #canvas = FigureCanvasTkAgg(static_plot, self)
-        #canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-        #canvas.draw()
+        tk.Grid.rowconfigure(self, (0,5), weight=1) 
+        tk.Grid.columnconfigure(self, (0,4), weight=1) 
         
+        label = ttk.Label(self, text="Data Analysis", font=LARGE_FONT)
+        label.grid(column=2,row=0, sticky=tk.N)
+        
+        button_home = ttk.Button(self, text="Home",
+                                    command=lambda: controller.show_frame(HomePage))
+        button_home.grid(column=1,row=1)
 
-        #toolbar = NavigationToolbar2Tk(canvas, self)
-        #toolbar.update()
-        #canvas._tkcanvas.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
-
-        # Live plot
-        canvas = FigureCanvasTkAgg(live_table, self)
+        button_file_select = ttk.Button(self, text="Open File",
+                                    command=lambda: select_file())
+        button_file_select.grid(column=3, row=1)
+        
+        # static plot
+        canvas = FigureCanvasTkAgg(static_plot, self)
+        canvas.get_tk_widget().grid(column=0, row=5, columnspan=5, rowspan=1, sticky="NSEW")
         canvas.draw()
-        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-
-        toolbar = NavigationToolbar2Tk(canvas,self)
+        
+        toolbarFrame = tk.Frame(self)
+        toolbarFrame.grid(column=0, row=4, columnspan=5, sticky=tk.W)
+        toolbar = NavigationToolbar2Tk(canvas, toolbarFrame)
         toolbar.update()
-        canvas._tkcanvas.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
-
+        
+        # Static table
+        canvas2 = FigureCanvasTkAgg(static_table, self)
+        canvas2.get_tk_widget().grid(column=0, row=3, columnspan=5, rowspan=1, sticky="NSEW")
+        canvas2.draw()
+        
+        toolbarFrame2 = tk.Frame(self)
+        toolbarFrame2.grid(column=0, row=2, columnspan=5, sticky=tk.W)
+        toolbar2 = NavigationToolbar2Tk(canvas2, toolbarFrame2)
+        toolbar2.update()
+        
 
 
 class FCSettings(tk.Frame):
@@ -319,6 +492,7 @@ class FCSettings(tk.Frame):
         #Pyro igniton time
         global pyroIgnitionTimeOptions
         pyroIgnitionTimeOptions = [ "NULL",
+                                    "NULL",
                                     "0.5 seconds",
                                     "1.0 seconds",
                                     "2.0 seconds",
@@ -388,6 +562,7 @@ class FCSettings(tk.Frame):
 
         global auxPryoDeployPositions
         auxPryoDeployPositions = [  "NULL",
+                                    "NULL"
                                     "BECO",
                                     "Stage",
                                     "Separation",
@@ -453,6 +628,7 @@ class FCSettings(tk.Frame):
         transmitPowerLabel = ttk.Label(telemetryConfig, text="Transmit Power: ")
         global transmitPowerOptions
         transmitPowerOptions = ["NULL",
+                                "NULL",
                                 "-1 dBm", 
                                 "2 dBm",
                                 "5 dBm",
@@ -469,6 +645,7 @@ class FCSettings(tk.Frame):
         serialBuadRateLabel = ttk.Label(telemetryConfig, text="Serial Buad Rate: ")
         global serialBuadRateOptions
         serialBuadRateOptions = ["NULL", 
+                                 "NULL",
                                  "1200 bps", 
                                  "2400 bps", 
                                  "4800 bps", 
@@ -489,6 +666,7 @@ class FCSettings(tk.Frame):
         transmitFlightRateLabel = ttk.Label(telemetryConfig, text="Flight Transmit Rate: ")
         global transmitFlightRateOptions
         transmitFlightRateOptions = ["NULL", 
+                                     "NULL",
                                      "1 hz", 
                                      "2 hz", 
                                      "5 hz", 
@@ -502,6 +680,7 @@ class FCSettings(tk.Frame):
         transmitLandingRateLabel = ttk.Label(telemetryConfig, text="Landing Transmit Rate: ")
         global transmitLandingRateOptions
         transmitLandingRateOptions = ["NULL", 
+                                      "NULL",
                                      "1 seconds", 
                                      "2 seconds", 
                                      "5 seconds", 
@@ -587,6 +766,7 @@ class FCSettings(tk.Frame):
         dataSaveRateLabel = ttk.Label(data, text="Data Save Rate: ")
         global dataSaveRateOptions
         dataSaveRateOptions = ["NULL", 
+                               "NULL",
                                "1 hz",
                                "5 hz", 
                                "10 hz", 
@@ -633,6 +813,7 @@ class FCSettings(tk.Frame):
         buzzerBeepPatternLabel = ttk.Label(aux, text="Buzzer Beep Pattern: ")
         global buzzerBeepPatternOptions
         buzzerBeepPatternOptions = ["NULL",
+                                    "NULL",
                              "1",
                              "2",
                              "3",
@@ -786,70 +967,167 @@ class FCSettings(tk.Frame):
 class LiveFlight(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        label = ttk.Label(self, text="Telemetry Data", font=LARGE_FONT)
-        label.pack(pady=10, padx=10)
+        tk.Grid.rowconfigure(self, (0,5), weight=1) 
+        tk.Grid.columnconfigure(self, (0,4), weight=1) 
+        
+        label = ttk.Label(self, text="Telemetry", font=LARGE_FONT)
+        label.grid(column=2,row=0, sticky=tk.N)
+        
+        button_home = ttk.Button(self, text="Home",
+                                    command=lambda: controller.show_frame(HomePage))
+        button_home.grid(column=1,row=1)
 
-        button1 = ttk.Button(self, text="Home",
-                            command=lambda: controller.show_frame(HomePage))
-        button1.pack()
 
-
-        # Live Plot
+        button_file_select = ttk.Button(self, text="Save Flight",
+                                    command=lambda: save_file())
+        button_file_select.grid(column=3, row=1)
+        
         canvas = FigureCanvasTkAgg(live_plot, self)
-        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        canvas.get_tk_widget().grid(column=0, row=5, columnspan=5, rowspan=1, sticky="NSEW")
         canvas.draw()
-
-        toolbar = NavigationToolbar2Tk(canvas,self)
+        
+        toolbarFrame = tk.Frame(self)
+        toolbarFrame.grid(column=0, row=4, columnspan=5, sticky=tk.W)
+        toolbar = NavigationToolbar2Tk(canvas, toolbarFrame)
         toolbar.update()
-        canvas._tkcanvas.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
+        
+        # Static table
+        canvas2 = FigureCanvasTkAgg(live_table, self)
+        canvas2.get_tk_widget().grid(column=0, row=3, columnspan=5, rowspan=1, sticky="NSEW")
+        canvas2.draw()
+        
+        toolbarFrame2 = tk.Frame(self)
+        toolbarFrame2.grid(column=0, row=2, columnspan=5, sticky=tk.W)
+        toolbar2 = NavigationToolbar2Tk(canvas2, toolbarFrame2)
+        toolbar2.update()
 # Individual Pages End
 ### CLASS END ###
 
 
 ### FUNCTION DEFINE START ###
-# Get window screen information to scale window properly
-def get_win_dimensions(root):
-    screen_width = root.winfo_screenwidth()
-    screen_height = root.winfo_screenheight()
-
-    window_width = int(screen_width * settings.window.scale_width)
-    window_height = int(screen_height * settings.window.scale_height)
-
-    window_dimensions = str(window_width) + "x" + str(window_height)
-    
-    if (settings.DEBUG.status == True):
-        print("Window Stats:")
-        print("screen width:", screen_width)
-        print("window width scale:", settings.window.scale_width)
-        print("window width:", window_width)
-        print("screen height:", screen_height)
-        print("window height scale:", settings.window.scale_height)
-        print("window height:", window_height)
-        print("window dimensions:", window_dimensions)
-        print()
-
-    return window_dimensions
-
 # Used to animate a matplotlib figure
 def animate_live_plot(i):
-    data = pd.read_csv(PATH_LIVEDATA)
-    #data.drop(["Events"], axis=1)
+
+    if (CURRENT_PAGE == "Telemetry"): # To do: add additional statement to require new data to update plot
+        if (settings.DEBUG.status == True):
+            start = time.time()
+            print("\nTelemetry plot performance:")
     
-    live_plot_subplot1.clear()
-    live_plot_subplot2.clear()
-    live_plot_subplot3.clear()
-    live_plot_subplot4.clear()
-    live_plot_subplot1.plot(data['Time'], data['Altitude'], color='k')
-    live_plot.subplots_adjust(hspace = 0.3)
-    live_plot_subplot2.plot(data['Time'], data['Velocity'], color='r')
-    live_plot_subplot1.set_xlabel("Time (sec)")
-    live_plot_subplot1.set_ylabel("AGL Altitude (ft)")
-    live_plot_subplot2.set_xlabel("Time (sec)")
-    live_plot_subplot2.set_ylabel("Velocity (ft/s)")
-    live_plot_subplot3.plot(data['Longitude'], data['Latitude'], color='b')
-    live_plot_subplot3.set_xlabel("Longitude (deg)")
-    live_plot_subplot3.set_ylabel("Latitude (deg)")
-    live_plot_subplot4
+        data = pd.read_csv(PATH_LIVEDATA)
+        try:
+            data.drop(["Events"], axis=1)
+        except:
+            if (settings.DEBUG.status == True):
+                print("WARNING: No 'Events' in data file")
+        
+        if (settings.DEBUG.status == True):
+            data_time_stop = time.time()
+            print("Data Read Time: %f sec" %(data_time_stop-start))
+            start = time.time()
+
+        live_plot.subplots_adjust(hspace = 0.3)
+
+        # Multi-threading start
+
+        def plot_altitude():
+            live_plot_subplot1.clear()
+            live_plot_subplot1.plot(data['Time'], data['Altitude'], color='k')
+            live_plot_subplot1.set_xlabel("Time (sec)")
+            live_plot_subplot1.set_ylabel("AGL Altitude (ft)")
+
+        def plot_velocity():
+            live_plot_subplot2.clear()
+            live_plot_subplot2.plot(data['Time'], data['Velocity'], color='k')
+            live_plot_subplot2.set_xlabel("Time (sec)")
+            live_plot_subplot2.set_ylabel("Velocity (ft/s)")
+
+        def plot_acceleration():
+            live_plot_subplot3.clear()
+            live_plot_subplot3.plot(data['Time'], data['Acceleration'], color='k')
+            live_plot_subplot3.set_xlabel("Time (sec)")
+            live_plot_subplot3.set_ylabel("Acceleration (G)")
+
+        def plot_coordinates():
+            live_plot_subplot4.clear()
+            live_plot_subplot4.plot(data['Longitude'], data['Latitude'], color='k')
+            live_plot_subplot4.set_xlabel("Longitude (deg)")
+            live_plot_subplot4.set_ylabel("Latitude (deg)")
+
+        t1 = threading.Thread(target=plot_altitude)
+        t2 = threading.Thread(target=plot_velocity)
+        t3 = threading.Thread(target=plot_acceleration)
+        t4 = threading.Thread(target=plot_coordinates)
+        
+        t1.start()
+        t2.start()
+        t3.start()
+        t4.start()
+
+        if (settings.DEBUG.status == True):
+            data_plot_stop = time.time()
+            print("Plot Time: %f sec\n" %(data_plot_stop-start))
+
+
+def animate_live_table(i):
+    if (CURRENT_PAGE == "Telemetry"): # To Do: add additional statement to require new data flag
+        data = pd.read_csv(PATH_LIVEDATA)
+
+        try:
+            max_altitude = max(data['Altitude'])
+            max_altitude_index = np.where(data['Altitude'] == max_altitude)
+        except:
+            max_altitude = 0
+            max_altitude_index = 0
+            if (settings.DEBUG.status == True):
+                print("WARNING: Could not find max altitude!")
+            return None
+        
+        try:
+            max_velocity = max(data['Velocity'])
+            max_velocity_index = np.where(data['Velocity'] == max_velocity)
+        except:
+            max_velocity = 0
+            max_velocity_index = 0
+            if (settings.DEBUG.status == True):
+                print("WARNING: Could not find max velocity!")
+            return None
+
+        try:
+            max_acceleration = max(data['Acceleration'])
+            max_acceleration_index = np.where(data['Acceleration'] == max_acceleration)
+        except:
+            max_acceleration = 0
+            max_acceleration_index = 0
+            if (settings.DEBUG.status == True):
+                print("Warning: Could not find max acceleration!")
+            return None
+        try:
+            data_length = len(data["Latitude"]) - 1
+            latitude = data['Latitude'][data_length]
+            longitude = data['Longitude'][data_length]
+        except:
+            latitude = 0
+            longitude = 0
+            if (settings.DEBUG.status == True):
+                print("Warning: Could not find coordinates!")
+            return None
+        
+        data_table = [[max_velocity, round(data['Time'][max_velocity_index[0][0]],2)],
+                        [max_altitude, round(data['Time'][max_altitude_index[0][0]],2)],
+                        [latitude, round(data['Time'][len(data['Time'])-1],2)], 
+                        [longitude, round(data['Time'][len(data['Time'])-1],2)]]
+        
+        
+        useful_params = pd.DataFrame(data_table, index = ['Max Velocity [m/s]', 'Apogee [m]', 'Current Latitude', 'Current Longitude'], columns = ['Value', 'Time [s]'])
+
+        live_table_subplot.clear()
+
+        # Table parameters
+        live_table.patch.set_visible(False)
+        live_table_subplot.axis('off')
+        live_table_subplot.table(cellText=useful_params.values, colLabels=useful_params.columns, rowLabels=useful_params.index, loc='center')
+        live_table.tight_layout()
+
 
 def plot_static(): 
     data = pd.read_csv(PATH_DATAFILE)
@@ -864,28 +1142,73 @@ def plot_static():
     static_plot_subplot2.plot(data['Time'], data['Velocity'], color='r')
     static_plot_subplot1.set_xlabel("Time (sec)")
     static_plot_subplot1.set_ylabel("AGL Altitude (ft)")
+
+    static_plot_subplot2.plot(data['Time'], data['Velocity'], color='k')
     static_plot_subplot2.set_xlabel("Time (sec)")
     static_plot_subplot2.set_ylabel("Velocity (ft/s)")
-    static_plot_subplot3 
-    static_plot_subplot4
+    
+    static_plot_subplot3.plot(data['Time'], data['Acceleration'], color='k')
+    static_plot_subplot3.set_xlabel("Time (sec)")
+    static_plot_subplot3.set_ylabel("Acceleration (G)")
 
-def animate_live_table(i):
-    data = pd.read_csv(PATH_LIVEDATA)
-    max_alt = max(data['Altitude'])
-    max_alt_ind = np.where(data['Altitude'] == max_alt)
-    max_vel = max(data['Velocity'])
-    max_vel_ind = np.where(data['Velocity'] == max_vel)
-    lat = max(data['Latitude'])
-    lon = max(data['Longitude'])
-    accel = np.zeros(len(data['Time']))
+    static_plot_subplot4.plot(data['Latitude'], data['Longitude'], color='k')
+    static_plot_subplot4.set_xlabel("Longitude (deg)")
+    static_plot_subplot4.set_ylabel("Latitude (deg)")
+
+
+def table_static():
+    data = pd.read_csv(PATH_DATAFILE)
+    try:
+        data.drop(["Events"], axis=1)
+    except:
+        if (settings.DEBUG.status == True):
+            print("WARNING: No 'Events' in data file")
+    
+    try:
+        max_altitude = max(data['Altitude'])
+        max_altitude_index = np.where(data['Altitude'] == max_altitude)
+    except:
+        max_altitude = 0
+        max_altitude_index = 0
+        if (settings.DEBUG.status == True):
+            print("WARNING: Could not find max altitude!")
+    
+    try:
+        max_velocity = max(data['Velocity'])
+        max_velocity_index = np.where(data['Velocity'] == max_velocity)
+    except:
+        max_velocity = 0
+        max_velocity_index = 0
+        if (settings.DEBUG.status == True):
+            print("WARNING: Could not find max velocity!")
+
+    try:
+        max_acceleration = max(data['Acceleration'])
+        max_acceleration_index = np.where(data['Acceleration'] == max_acceleration)
+    except:
+        max_acceleration = 0
+        max_acceleration_index = 0
+        if (settings.DEBUG.status == True):
+            print("Warning: Could not find max acceleration!")
+
+    try:
+        data_length = len(data["Latitude"]) - 1
+        latitude = data['Latitude'][data_length]
+        longitude = data['Longitude'][data_length]
+    except:
+        latitude = 0
+        longitude = 0
+        if (settings.DEBUG.status == True):
+            print("Warning: Could not find coordinates!")
+    
     data_table = None
-
-    data_table = [[max_vel, round(data['Time'][max_vel_ind[0][0]],2)], [max_alt, round(data['Time'][max_alt_ind[0][0]],2)],
-        [lat, round(data['Time'][len(data['Time'])-1],2)], 
-        [lon, round(data['Time'][len(data['Time'])-1],2)]]
+    data_table = [[max_velocity, round(data['Time'][max_velocity_index[0][0]],2)], [max_altitude, round(data['Time'][max_altitude_index[0][0]],2)],
+        [latitude, round(data['Time'][len(data['Time'])-1],2)], 
+        [longitude, round(data['Time'][len(data['Time'])-1],2)]]
     
     useful_params = None
     useful_params = pd.DataFrame(data_table, index = ['Max Velocity [m/s]', 'Apogee [m]', 'Current Latitude', 'Current Longitude'], columns = ['Value', 'Time [s]'])
+
 
     live_table_subplot.clear()
 
@@ -979,8 +1302,39 @@ def saveflightcontrolsettings(drogueDeployDelayEntryBox, mainDeploymentAltitudeE
         print('Flight Settings Saved')
 
 
+
+    window_width = int(screen_width * settings.window.scale_width)
+    window_height = int(screen_height * settings.window.scale_height)
+
+    window_dimensions = str(window_width) + "x" + str(window_height)
+    
+    if (settings.DEBUG.status == True):
+        print("Window Stats:")
+        print("screen width:", screen_width)
+        print("window width scale:", settings.window.scale_width)
+        print("window width:", window_width)
+        print("screen height:", screen_height)
+        print("window height scale:", settings.window.scale_height)
+        print("window height:", window_height)
+        print("window dimensions:", window_dimensions)
+        print()
+
+    return window_dimensions
+    
+# Resizes window to force window update for "DataAnalysis" page
+def refresh():
+    screen_height = app.winfo_height()
+    screen_width = app.winfo_width()
+
+    geometry_string = str(screen_width + 10) + "x" + str(screen_height + 10)
+    app.geometry(geometry_string)
+
+    if (settings.DEBUG.status == True):
+        print("Refreshing window...")
+    
 def select_file():
     global PATH_DATAFILE
+
     PATH_DATAFILE = askopenfilename()
     print("Selected data file path: %s" % (PATH_DATAFILE))
     plot_static()
@@ -1030,26 +1384,70 @@ def switchbuttonstatus(m):
     button_status[m] = 0
     print("Data Sent")
 
+    try:
+        temp_file_path = askopenfilename()
+    except:
+        print("Warning: file path not valid: %s " %(temp_file_path))
+        return None
+    PATH_DATAFILE = temp_file_path
+    if (settings.DEBUG.status == True):
+        print("Selected data file path: %s" % (PATH_DATAFILE))
+    #GSApp.show_frame(DataAnalysis) 
+    plot_static()
+    table_static()
+    refresh()
+
+# Saves temporary telemetry flight data file and saves it in a specified location
+def save_file(): 
+    global PATH_LIVEDATA, PATH_DATAFILE
+    PATH_DATAFILE = asksaveasfilename(filetypes=[("comma separated value (*.csv)", "*.csv")]) + ".csv"
+    shutil.copyfile(PATH_LIVEDATA, PATH_DATAFILE)
+    if (settings.DEBUG.status == True):
+        print("Taking telemetry file: %s" %(PATH_LIVEDATA))
+        print("Saving as: %s" %(PATH_DATAFILE))
+
+# Clear temporary telemetry flight data file
+def telemetry_file_init():
+    global PATH_LIVEDATA
+    if os.path.exists(PATH_LIVEDATA):
+        os.remove(PATH_LIVEDATA)
+    else:
+        print("WARNING: Telemetry file not found!")
+    temp_file = open(PATH_LIVEDATA,"x")
+    temp_file.write("Time,Altitude,Velocity,Acceleration,Latitude,Longitude,Events\n") # empty header
+    temp_file.close()
+    if (settings.DEBUG.status == True):
+        print("Clearing temp file: %s" %(PATH_LIVEDATA))
+
+
 ### MAIN START ###
 def main():
     ### SETUP START ###
     if (settings.DEBUG.status == True):
-        print("Starting ground station GUI...")
-        print()
+        print("Starting ground station GUI...\n")
+    
+    telemetry_file_init()
+
     ### SETUP END ###
 
+    global app 
     app = GSApp()
     app.geometry(get_win_dimensions(app))
     app.minsize(600,400)
     app.title("Ground Station Application")
 
-    filepath_icon_photo = os.path.join(PATH, 'images', 'SEDSIIT-logo.png')
-    app.tk.call('wm','iconphoto',app._w,tk.Image("photo", file=filepath_icon_photo))
 
-    
+    if (PLATFORM == "windows"):
+        filepath_icon_photo = os.path.join(PATH, 'images', 'SEDSIIT-logo_icon.ico')
+        app.iconbitmap(filepath_icon_photo)
+    else:
+        filepath_icon_photo = os.path.join(PATH, 'images', 'SEDSIIT-logo.png')
+        app.tk.call('wm','iconphoto',app._w,tk.Image("photo", file=filepath_icon_photo))
+    #app.tk.call('wm','iconphoto',app._w,tk.Image("photo", file=filepath_icon_photo))
+
     ani = animation.FuncAnimation(live_plot, animate_live_plot, interval=500)
     ani2 = animation.FuncAnimation(live_table, animate_live_table, interval=500)
-   
+    
     app.mainloop()
 ### MAIN END ###
 ### FUNCTION DEFINE END ###

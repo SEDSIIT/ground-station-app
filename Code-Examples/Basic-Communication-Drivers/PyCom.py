@@ -1,7 +1,7 @@
 import serial
 from serial import Serial
 
-ser = Serial('COM4', 115200)
+ser = Serial('COM3', 115200)
 if not ser.isOpen():
     ser.open()
 print('COM4 is open', ser.isOpen())
