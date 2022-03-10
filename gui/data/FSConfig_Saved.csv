@@ -1,0 +1,2 @@
+,drogueDeployDelay,mainDeploymentAltitude,pyroIgnitionTime,auxPyroC,auxPyroC_DeployPosition,auxPyroC_DelayAfterFlag,auxPyroD,auxPyroD_DeployPosition,auxPyroD_DelayAfterFlag,auxPyroE,auxPyroE_DeployPosition,auxPyroE_DelayAfterFlag,auxPyroF,auxPyroF_DeployPosition,auxPyroF_DelayAfterFlag,transmitPower,serialBuadRate,channel,transmitFlightRate,transmitLandingRate,callsignEntryBox,dataSaveRate,buzzerFreqency,buzzerBeepPatternClicked
+0,6,6,3.0 seconds,1,MECO,1,1,MECO,0,1,Apogee,0,1,MECO,0,11 dBm,4800 bps,4,5 hz,5 seconds,7,20 hz,2000,3
