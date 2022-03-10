@@ -21,6 +21,13 @@ For latest tasks go to: https://github.com/SEDSIIT/ground-station-app/projects/1
 '''
 
 ### IMPORT START ###
+
+from dataclasses import dataclass
+from distutils import command
+from faulthandler import disable
+import string
+from turtle import width
+
 import matplotlib
 from matplotlib import image
 matplotlib.use("TkAgg")
@@ -265,7 +272,9 @@ class FCSettings(tk.Frame):
         testing = ttk.Frame(notebook)
         
         notebook.add(recovery, text="Recovery")
-        notebook.add(auxPyro, text="Aux Pyro")
+
+        notebook.add(auxPyro, text="Auxiliary Pyro")
+
         notebook.add(telemetryConfig, text="Telemetry Config")
         notebook.add(calibration, text="Calibration")
         notebook.add(data, text="Data")
