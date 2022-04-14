@@ -10,10 +10,31 @@ SOFTWARE.
 Configuration for the style, size, and elements of the GUI
 will be configured here
 '''
+
+### Global Variables START ###
+
+LARGE_FONT = ("Verdona", 12)
+
+PATH = None
+PATH_LIVEDATA = None # location of telemetry data
+PATH_DATAFILE = None
+
+PLATFORM = None
+
+CURRENT_PAGE = "HomePage"
+### Global Variables END ###
+
+
 class DEBUG:
     status = True
 
 class window:
+    height = 1
+    width = 1
     scale_height = 0.5
     scale_width = 0.5
+
+class screen:
+    height = 1
+    width = 1
     
