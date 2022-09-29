@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk, StringVar
 import sys
 import glob
-import serial as Serial
+import serial
 
 
 import pages.HomePage
@@ -34,10 +34,10 @@ class Settings(tk.Frame):
         result = []
         for port in ports:
             try:
-                s = Serial.Serial(port)
+                s = serial.Serial(port)
                 s.close()
                 result.append(port)
-            except (OSError, Serial.SerialException):
+            except:
                 pass
         return result
     
@@ -89,19 +89,19 @@ class Settings(tk.Frame):
         test_connection_button = ttk.Button(fcConnect, text="READ", command=lambda: fc_connection_test_read(fc_connect_button_clicked.get()))
         
         write_connection_button_lable = ttk.Label(fcConnect, text="WRITE connection: ")
-        write_connection_button = ttk.Button(fcConnect, text="WRTIE", command=lambda: fc_connection_test_write(fc_connect_button_clicked.get()))
+        write_connection_button = ttk.Button(fcConnect, text="WRITE", command=lambda: fc_connection_test_write(fc_connect_button_clicked.get()))
         
         clear_output_button = ttk.Button(fcConnect, text="CLEAR OUTPUT", command=lambda: readOnlyText.delete("1.0","end"))
         
         # <<<fcConnect>>> HELPER FUNCTION DEFS START
         def fc_connection_set(comport):
-            ser = Serial.Serial(comport, 115200)
+            ser = serial.Serial(comport, 115200)
             if not ser.isOpen():
                 ser.open()
             readOnlyText.insert(1.0, comport + " is open and ready to go! \n")
         
         def fc_connection_test_read(comport):
-            ser = Serial.Serial(comport, 115200)
+            ser = serial.Serial(comport, 115200)
             readOnlyText.insert(1.0, "************************\n")
             readOnlyText.insert(1.0, "READ TEST: READING FROM FLIGHT COMPUTER: \n")
             
@@ -111,7 +111,7 @@ class Settings(tk.Frame):
             readOnlyText.insert(1.0, "SUCCESS!!\n")
                 
         def fc_connection_test_write(comport):
-            ser = Serial.Serial(comport, 115200)
+            ser = serial.Serial(comport, 115200)
             readOnlyText.insert(1.0, "************************\n")
             readOnlyText.insert(1.0, "WRITE TEST: WRITING DATA TO FLIGHT COMPUTER: \n")
             send = "WROTE DATA SUCCESSFULLY! NOT "
