@@ -28,13 +28,15 @@ def get_win_dimensions():
     root.destroy()
     return window_dimensions
     
-def refresh(): 
-    '''
-    ### CURRENTLY DOES NOT WORK ###
-    Resizes window to force window update for "DataAnalysis" page
-    '''
-    geometry_string = str(settings.window.width + 10) + "x" + str(settings.window.height + 10)
-    pages.core.GSApp.geometry(geometry_string) # This part does not work
+def refresh(self,page,parent,controller): 
 
-    if (settings.DEBUG.status == True):
-        print("Refreshing window...")
+        self.destroy()
+        self.__init__(parent,controller)
+        frame = page(parent,controller)
+        controller.frames[page] = frame
+        frame.grid(row=0, column=0, sticky="nsew")
+
+        controller.show_frame(page)
+
+        # TODO: add functionality to auto refresh for live feed
+        # self.after(100,self.refresh(parent,controller))
