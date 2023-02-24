@@ -36,7 +36,7 @@ class GSApp(tk.Tk):
         # File Menu 
         fileMenu = tk.Menu(menubar, tearoff=0)
         fileMenu.add_command(label="Save Settings", command = lambda: tk.messagebox.showinfo("Information","Not supported yet!"))
-        fileMenu.add_command(label="Open", command = lambda: lib.files.select_file())
+        fileMenu.add_command(label="Open", command = lambda: lib.files.select_file(self,pages.DataAnalysis.DataAnalysis,container,self))
         fileMenu.add_separator()
         fileMenu.add_command(label="Exit", command = lambda: quit()) # Fixed?
         menubar.add_cascade(label="File", menu=fileMenu)
