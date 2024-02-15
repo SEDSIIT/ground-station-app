@@ -38,14 +38,16 @@ class GroundStationApp:
 
     # Control Panel window widget instantiations
     def live_metrics(self):
-        #frame = ttk.Frame()
-        return 
+        frame = ttk.Frame(self.root_mainframe)
+        return frame
     
     def connection_status(self):
-        return
+        frame = ttk.Frame(self.root_mainframe)
+        return frame
     
     def nova_configuration(self):
-        return
+        frame = ttk.Frame(self.root_mainframe)
+        return frame
     
     def run(self):
         self.root.mainloop()
