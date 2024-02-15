@@ -4,11 +4,21 @@ import time
 
 class GroundStationApp:
     def __init__(self):
+        
+        # Root toplevel window
+        # Control panel window
         self.root = Tk()
-        self.root.title("Testing")
+        self.root.title("Control Panel")
+
+        # Subroot toplevel window
+        # Monitor window
+        self.subroot = Toplevel(self.root)
+        self.subroot.title("Monitor")
+
+
+        # Setting up
+
+
 
     def run(self):
-        print("Hello World")
-        time.sleep(3)
-        print("testing threading!")
         self.root.mainloop()
