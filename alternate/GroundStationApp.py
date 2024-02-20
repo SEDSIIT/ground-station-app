@@ -30,11 +30,13 @@ class GroundStationApp:
         s = ttk.Style()
         # print(s.theme_names())
         styles.set_styles(s)
+        print(s.layout("TFrame"))
+        print(s.element_options("Frame.border"))
 
         
         self.root.title("Control Panel")
         # following 16:9 aspect ration
-        self.root_mainframe = ttk.Frame(self.root, width=1024, height=600)
+        self.root_mainframe = ttk.Frame(self.root)
         self.root_mainframe.grid(column = 0, row = 0)
 
         # Subroot toplevel window
@@ -42,7 +44,7 @@ class GroundStationApp:
         self.subroot = Toplevel(self.root)
         self.subroot.title("Monitor")
         # following 16:9 aspect ratio
-        self.subroot_mainframe = ttk.Frame(self.subroot, width=1024, height=600)
+        self.subroot_mainframe = ttk.Frame(self.subroot)
         self.subroot_mainframe.grid(column = 0, row = 0)
 
         # Control Panel window widget instantiations
@@ -51,9 +53,9 @@ class GroundStationApp:
         nc = nc_md.nova_configuration(self.root_mainframe)
 
         # Control Panel window gridding widgets
-        lm.grid(column=0, row=0, sticky=(N,W,E,S))
-        cs.grid(column=1, row=0, sticky=(N,W,E,S))
-        nc.grid(column=2, row=0, sticky=(N,W,E,S))
+        lm.grid(column=0, row=0)
+        cs.grid(column=1, row=0)
+        nc.grid(column=2, row=0)
     
     def run(self):
         self.root.mainloop()
