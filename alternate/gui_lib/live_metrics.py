@@ -1,25 +1,23 @@
 from tkinter import *
 from tkinter import ttk
-from tkinter import font
 
 def live_metrics(parent):
-        print(font.families())
+        
         frame = ttk.Frame(parent, padding=(10,0,10,10))
         frame['width'] = 256
         frame['borderwidth'] = 0
         frame['relief'] = 'flat'
         
 
-        live_metrics_lb = ttk.Label(frame, text="Live Metrics", padding=(0,0,0,10), font=("Freestyle Script", 64))
+        live_metrics_lb = ttk.Label(frame, text="Live Metrics", style='Header.TLabel')
 
-        call_sign_lb = ttk.Label(frame, text="Call Sign")
-        serial_lb    = ttk.Label(frame, text="Serial")
-        flight_lb    = ttk.Label(frame, text="Flight")
-        state_lb     = ttk.Label(frame, text="State")
-        rssi_lb      = ttk.Label(frame, text="RSSI")
-        age_lb       = ttk.Label(frame, text="Age")
+        call_sign_lb = ttk.Label(frame, text="Call Sign", style="Display.TLabel")
+        serial_lb    = ttk.Label(frame, text="Serial", style="Display.TLabel")
+        flight_lb    = ttk.Label(frame, text="Flight", style="Display.TLabel")
+        state_lb     = ttk.Label(frame, text="State", style="Display.TLabel")
+        rssi_lb      = ttk.Label(frame, text="RSSI", style="Display.TLabel")
+        age_lb       = ttk.Label(frame, text="Age", style="Display.TLabel")
 
-        
         live_metrics_lb.grid(column=0,row=0,columnspan=2, sticky=(N))
         
         call_sign_lb.grid(column=0,row=1)

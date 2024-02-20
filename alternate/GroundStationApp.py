@@ -1,18 +1,37 @@
 from tkinter import *
 from tkinter import ttk
+from ttkthemes import ThemedTk
 import time
 from gui_lib import live_metrics as lm_md
 from gui_lib import connection_status as cs_md
 from gui_lib import nova_configuration as nc_md
+from gui_lib import styles 
 
 
 
 class GroundStationApp:
     def __init__(self):
         
+        # check out https://ttkthemes.readthedocs.io/en/latest/themes.html
+        # you must have 'ttkthemes' installed
+        # 'python -m pip install ttkthemese'
+        
+        
+
+        # To see what kind of fonts are installed:
+        # 'from tkinter import font'
+        # print(font.families())'
+
         # Root toplevel window
-        # Control Panel window
-        self.root = Tk()
+        # set theme here!
+        self.root = ThemedTk(theme="equilux")
+        # That being said, we will still define custom styles that are derived from the styles 
+        # of the currently set theme 
+        s = ttk.Style()
+        # print(s.theme_names())
+        styles.set_styles(s)
+
+        
         self.root.title("Control Panel")
         # following 16:9 aspect ration
         self.root_mainframe = ttk.Frame(self.root, width=1024, height=600)
