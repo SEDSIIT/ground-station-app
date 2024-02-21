@@ -5,12 +5,9 @@ def live_metrics(parent):
         
         frame = ttk.Frame(parent, padding=(10,0,10,10))
         frame['width'] = 256
-        frame['borderwidth'] = 2
-        frame['relief'] = 'raised'
+        frame['borderwidth'] = 5
+        frame['relief'] = 'groove'
         
-
-        live_metrics_lb = ttk.Label(frame, text="Live Metrics", style='Header.TLabel')
-
         call_sign_lb = ttk.Label(frame, text="Call Sign", style="Display.TLabel")
         serial_lb    = ttk.Label(frame, text="Serial", style="Display.TLabel")
         flight_lb    = ttk.Label(frame, text="Flight", style="Display.TLabel")
@@ -26,7 +23,6 @@ def live_metrics(parent):
         serial_f    = ttk.Frame(frame, style="Display.TFrame")
         serial_f['borderwidth'] = 2
         serial_f['relief'] = 'raised'
-
 
         flight_f    = ttk.Frame(frame, style="Display.TFrame")
         flight_f['borderwidth'] = 2
@@ -50,22 +46,20 @@ def live_metrics(parent):
         state_flb     = ttk.Label(state_f, text="342", style="DisplayInner.TLabel")
         rssi_flb      = ttk.Label(rssi_f, text="3423", style="DisplayInner.TLabel")
         age_flb       = ttk.Label(age_f, text="222", style="DisplayInner.TLabel")
-
-        live_metrics_lb.grid(column=0,row=0,columnspan=2, sticky=(N))
         
-        call_sign_lb.grid(column=0,row=1)
-        serial_lb   .grid(column=0,row=2)
-        flight_lb   .grid(column=0,row=3)
-        state_lb    .grid(column=0,row=4)
-        rssi_lb     .grid(column=0,row=5)
-        age_lb      .grid(column=0,row=6)
+        call_sign_lb.grid(column=0,row=0)
+        serial_lb   .grid(column=0,row=1)
+        flight_lb   .grid(column=0,row=2)
+        state_lb    .grid(column=0,row=3)
+        rssi_lb     .grid(column=0,row=4)
+        age_lb      .grid(column=0,row=5)
 
-        call_sign_f.grid(column=1,row=1,sticky=(W,E))
-        serial_f   .grid(column=1,row=2,sticky=(W,E))
-        flight_f   .grid(column=1,row=3,sticky=(W,E))
-        state_f    .grid(column=1,row=4,sticky=(W,E))
-        rssi_f     .grid(column=1,row=5,sticky=(W,E))
-        age_f      .grid(column=1,row=6,sticky=(W,E))
+        call_sign_f.grid(column=1,row=0,sticky=(W,E))
+        serial_f   .grid(column=1,row=1,sticky=(W,E))
+        flight_f   .grid(column=1,row=2,sticky=(W,E))
+        state_f    .grid(column=1,row=3,sticky=(W,E))
+        rssi_f     .grid(column=1,row=4,sticky=(W,E))
+        age_f      .grid(column=1,row=5,sticky=(W,E))
 
         call_sign_flb.grid(column=0, row=0)
         serial_flb   .grid(column=0, row=0)
@@ -88,8 +82,6 @@ def live_metrics(parent):
         rssi_f     .rowconfigure(0, weight = 1)
         age_f      .rowconfigure(0, weight = 1)
         
-
-
         frame.columnconfigure(0, minsize=128)
         frame.columnconfigure(1, minsize=128)
 

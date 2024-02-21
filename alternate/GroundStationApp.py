@@ -9,6 +9,7 @@ from gui_lib import styles
 
 
 
+
 class GroundStationApp:
     def __init__(self):
         
@@ -24,14 +25,12 @@ class GroundStationApp:
 
         # Root toplevel window
         # set theme here!
-        self.root = ThemedTk(theme="equilux")
+        self.root = ThemedTk(theme="blue")
         # That being said, we will still define custom styles that are derived from the styles 
         # of the currently set theme 
         s = ttk.Style()
         # print(s.theme_names())
         styles.set_styles(s)
-        print(s.layout("TFrame"))
-        print(s.element_options("Frame.border"))
 
         
         self.root.title("Control Panel")
@@ -53,9 +52,9 @@ class GroundStationApp:
         nc = nc_md.nova_configuration(self.root_mainframe)
 
         # Control Panel window gridding widgets
-        lm.grid(column=0, row=0)
-        cs.grid(column=1, row=0)
-        nc.grid(column=2, row=0)
+        lm.grid(column=0, row=0, sticky=(N))
+        cs.grid(column=1, row=0, sticky=(N))
+        nc.grid(column=2, row=0, sticky=(N))
     
     def run(self):
         self.root.mainloop()
