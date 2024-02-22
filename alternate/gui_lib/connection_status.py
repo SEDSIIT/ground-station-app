@@ -15,54 +15,73 @@ def connection_status(parent):
         # NOVA FC status 
         nova_lb = ttk.Label(frame, text="NOVA FC", style="Display2.TLabel")
         nova_mini_f = ttk.Frame(frame)
+
+        #in nova_mini_f
         nova_connect_btn = ttk.Button(nova_mini_f, text="Connect")
         nova_light = ttk.Radiobutton(nova_mini_f)
+
         nova_log_txt = Text(frame, width = 20, height = 5)
-        nova_mini_f2 = ttk.Frame(frame, padding=(10,0,10,0))
+        nova_mini_f2 = ttk.Frame(frame, padding=(0,0,5,0))
 
-        nova_callsign_cb = ttk.Combobox(nova_mini_f2)
+        #in nova_mini_f2
+        nova_callsign_lb = ttk.Label(nova_mini_f2, text="Call Sign")
+        nova_callsign_e = ttk.Entry(nova_mini_f2)
 
-        nova_channel_cb = ttk.Combobox(nova_mini_f2)
-        nova_channel_cb['values'] = ('Channel 1','Channel 2')
-        nova_channel_cb.state(['readonly'])
-
+        nova_frequency_lb = ttk.Label(nova_mini_f2, text="Frequency | CH")
         nova_frequency_cb = ttk.Combobox(nova_mini_f2)
-        nova_frequency_cb['values'] = ('500Mhz','1000Mhz')
+        nova_frequency_cb['values'] = ('434.550Mhz CH0','435.550Mhz CH1')
         nova_frequency_cb.state(['readonly'])
         
 
         # Arduino status
         arduino_lb = ttk.Label(frame, text="Arduino", style="Display2.TLabel")
         arduino_mini_f = ttk.Frame(frame)
+        
+        #in arduino_mini_f
         arduino_connect_btn = ttk.Button(arduino_mini_f, text="Connect")
         arduino_light = ttk.Radiobutton(arduino_mini_f)
-        arduino_log_txt = Text(frame, width=20, height=5)
-        arduino_mini_f2 = ttk.Frame(frame, padding=(10,0,10,0))
 
-        arduino_callsign_cb = ttk.Combobox(arduino_mini_f2)
-        arduino_callsign_cb['values'] = ('COM1','COM4')
-        arduino_callsign_cb.state(['readonly'])
+        arduino_log_txt = Text(frame, width=20, height=5)
+        arduino_mini_f2 = ttk.Frame(frame, padding=(0,0,5,0))
+
+        #in arduino_mini_f2
+        arduino_comport_lb = ttk.Label(arduino_mini_f2, text="COM PORT")
+        arduino_comport_cb = ttk.Combobox(arduino_mini_f2)
+        arduino_comport_cb['values'] = ('COM1','COM4')
+        arduino_comport_cb.state(['readonly'])
 
         connection_status_lf.grid(column=0, row=0, columnspan=2, sticky=(W,E))
         connection_status_lb.grid(column=0, row=0)
         
         nova_lb          .grid(column=0, row=1)
         nova_mini_f      .grid(column=1, row=1, sticky=(N,W,E,S))
+
+        # in nova_mini_f
         nova_connect_btn .grid(column=0, row=0)
         nova_light       .grid(column=1, row=0)
+
         nova_log_txt     .grid(column=1, row=2)
         nova_mini_f2     .grid(column=0, row=2, sticky=(N,W,S,E))
-        nova_callsign_cb .grid(column=0, row=0)
-        nova_channel_cb  .grid(column=0, row=1)
-        nova_frequency_cb.grid(column=0, row=2)
+
+        # in nova_mini_f2
+        nova_callsign_lb .grid(column=0, row=0)
+        nova_callsign_e  .grid(column=1, row=0, sticky=(E), ipadx=7)
+        nova_frequency_lb.grid(column=0, row=1)
+        nova_frequency_cb.grid(column=1, row=1, sticky=(E))
 
         arduino_lb         .grid(column=0,row=3)
         arduino_mini_f     .grid(column=1,row=3, sticky=(N,W,E,S))
+
+        # in arduino_mini_f
         arduino_connect_btn.grid(column=0, row=0)
         arduino_light      .grid(column=1, row=0)
+
         arduino_log_txt    .grid(column=1, row=4)
-        arduino_mini_f2    .grid(column=0, row=4)
-        arduino_callsign_cb.grid(column=0, row=0)
+        arduino_mini_f2    .grid(column=0, row=4, sticky=(N,W,E,S))
+
+        #in arduino_mini_f2
+        arduino_comport_lb.grid(column=0, row=0, sticky=(N))
+        arduino_comport_cb.grid(column=1, row=0, sticky=(E,N))
         
         frame               .columnconfigure(0, weight = 1)
         frame               .columnconfigure(1, weight = 1)
@@ -73,7 +92,8 @@ def connection_status(parent):
         nova_mini_f     .columnconfigure(1, weight = 1)
         nova_mini_f     .rowconfigure(0, weight = 1)
 
-        nova_mini_f2    .columnconfigure(0, weight=1)
+        nova_mini_f2    .columnconfigure(0, weight = 1, minsize=100)
+        nova_mini_f2    .columnconfigure(1, weight = 1)
         nova_mini_f2    .rowconfigure(0, weight=1)
         nova_mini_f2    .rowconfigure(1, weight=1)
         nova_mini_f2    .rowconfigure(2, weight=1)
@@ -82,8 +102,10 @@ def connection_status(parent):
         arduino_mini_f     .columnconfigure(1, weight = 1)
         arduino_mini_f     .rowconfigure(0, weight = 1)
 
-        arduino_mini_f2    .columnconfigure(0, weight=1)
+        arduino_mini_f2    .columnconfigure(0, weight=1, minsize=100)
+        arduino_mini_f2    .columnconfigure(1, weight=1)
         arduino_mini_f2    .rowconfigure(0, weight=1)
+      
 
 
 

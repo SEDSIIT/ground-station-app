@@ -17,8 +17,6 @@ def test_io():
 
 
 def main():
-        
-
         gsa_obj = GroundStationApp()
         as_obj = ArduinoSerial()
 

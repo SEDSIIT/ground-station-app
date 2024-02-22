@@ -17,15 +17,13 @@ class GroundStationApp:
         # you must have 'ttkthemes' installed
         # 'python -m pip install ttkthemese'
         
-        
-
         # To see what kind of fonts are installed:
         # 'from tkinter import font'
         # print(font.families())'
 
         # Root toplevel window
         # set theme here!
-        self.root = ThemedTk(theme="blue")
+        self.root = ThemedTk(theme="arc")
         # That being said, we will still define custom styles that are derived from the styles 
         # of the currently set theme 
         s = ttk.Style()
