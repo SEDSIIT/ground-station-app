@@ -31,8 +31,12 @@ def connection_status(parent):
         nova_frequency_cb = ttk.Combobox(nova_mini_f2)
         nova_frequency_cb['values'] = ('434.550Mhz CH0','435.550Mhz CH1')
         nova_frequency_cb.state(['readonly'])
-        
 
+        nova_baud_lb = ttk.Label(nova_mini_f2, text="Baud rate")
+        nova_baud_cb = ttk.Combobox(nova_mini_f2)
+        nova_baud_cb['values'] = ('9600','115200')
+        nova_baud_cb.state(['readonly'])
+        
         # Arduino status
         arduino_lb = ttk.Label(frame, text="Arduino", style="Display2.TLabel")
         arduino_mini_f = ttk.Frame(frame)
@@ -68,6 +72,8 @@ def connection_status(parent):
         nova_callsign_e  .grid(column=1, row=0, sticky=(E), ipadx=7)
         nova_frequency_lb.grid(column=0, row=1)
         nova_frequency_cb.grid(column=1, row=1, sticky=(E))
+        nova_baud_lb     .grid(column=0, row=2)
+        nova_baud_cb     .grid(column=1, row=2)
 
         arduino_lb         .grid(column=0,row=3)
         arduino_mini_f     .grid(column=1,row=3, sticky=(N,W,E,S))
@@ -105,10 +111,5 @@ def connection_status(parent):
         arduino_mini_f2    .columnconfigure(0, weight=1, minsize=100)
         arduino_mini_f2    .columnconfigure(1, weight=1)
         arduino_mini_f2    .rowconfigure(0, weight=1)
-      
-
-
-
-
 
         return frame

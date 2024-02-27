@@ -23,7 +23,7 @@ class GroundStationApp:
 
         # Root toplevel window
         # set theme here!
-        self.root = ThemedTk(theme="arc")
+        self.root = ThemedTk(theme="radiance")
         # That being said, we will still define custom styles that are derived from the styles 
         # of the currently set theme 
         s = ttk.Style()
