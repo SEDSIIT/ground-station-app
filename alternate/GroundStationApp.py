@@ -50,9 +50,14 @@ class GroundStationApp:
         nc = nc_md.nova_configuration(self.root_mainframe)
 
         # Control Panel window gridding widgets
-        lm.grid(column=0, row=0, sticky=(N))
-        cs.grid(column=1, row=0, sticky=(N))
-        nc.grid(column=2, row=0, sticky=(N))
+        lm.grid(column=0, row=0, sticky=(N,W,E,S))
+        cs.grid(column=1, row=0, sticky=(N,W,E,S))
+        nc.grid(column=2, row=0, sticky=(N,W,E,S))
+
+        self.root_mainframe.columnconfigure(0, weight=1)
+        self.root_mainframe.columnconfigure(1, weight=1)
+        self.root_mainframe.columnconfigure(2, weight=1)
+        self.root_mainframe.rowconfigure(0, weight=1)
     
     def run(self):
         self.root.mainloop()

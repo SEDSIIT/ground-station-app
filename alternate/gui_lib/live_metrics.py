@@ -40,7 +40,7 @@ def live_metrics(parent):
         age_f['borderwidth'] = 2
         age_f['relief'] = 'raised'
 
-        call_sign_flb = ttk.Label(call_sign_f, text="4890", style="DisplayInner.TLabel")
+        call_sign_flb = ttk.Label(call_sign_f, text="NVFCRKT", style="DisplayInner.TLabel")
         serial_flb    = ttk.Label(serial_f, text="232", style="DisplayInner.TLabel")
         flight_flb    = ttk.Label(flight_f, text="557", style="DisplayInner.TLabel")
         state_flb     = ttk.Label(state_f, text="342", style="DisplayInner.TLabel")
@@ -82,7 +82,13 @@ def live_metrics(parent):
         rssi_f     .rowconfigure(0, weight = 1)
         age_f      .rowconfigure(0, weight = 1)
         
-        frame.columnconfigure(0, minsize=128)
-        frame.columnconfigure(1, minsize=128)
+        frame.columnconfigure(0, weight = 1, minsize=128)
+        frame.columnconfigure(1, weight = 1, minsize=128)
+        frame.rowconfigure(0, weight=1)
+        frame.rowconfigure(1, weight=1)
+        frame.rowconfigure(2, weight=1)
+        frame.rowconfigure(3, weight=1)
+        frame.rowconfigure(4, weight=1)
+        frame.rowconfigure(5, weight=1)
 
         return frame

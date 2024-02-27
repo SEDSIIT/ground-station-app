@@ -24,15 +24,15 @@ def connection_status(parent):
         nova_mini_f2 = ttk.Frame(frame, padding=(0,0,5,0))
 
         #in nova_mini_f2
-        nova_callsign_lb = ttk.Label(nova_mini_f2, text="Call Sign")
+        nova_callsign_lb = ttk.Label(nova_mini_f2, text="Call Sign", padding=(0,5,0,5))
         nova_callsign_e = ttk.Entry(nova_mini_f2)
 
-        nova_frequency_lb = ttk.Label(nova_mini_f2, text="Frequency | CH")
+        nova_frequency_lb = ttk.Label(nova_mini_f2, text="Frequency | CH", padding=(0,5,0,5))
         nova_frequency_cb = ttk.Combobox(nova_mini_f2)
         nova_frequency_cb['values'] = ('434.550Mhz CH0','435.550Mhz CH1')
         nova_frequency_cb.state(['readonly'])
 
-        nova_baud_lb = ttk.Label(nova_mini_f2, text="Baud rate")
+        nova_baud_lb = ttk.Label(nova_mini_f2, text="Baud rate", padding=(0,5,0,5))
         nova_baud_cb = ttk.Combobox(nova_mini_f2)
         nova_baud_cb['values'] = ('9600','115200')
         nova_baud_cb.state(['readonly'])
@@ -98,7 +98,7 @@ def connection_status(parent):
         nova_mini_f     .columnconfigure(1, weight = 1)
         nova_mini_f     .rowconfigure(0, weight = 1)
 
-        nova_mini_f2    .columnconfigure(0, weight = 1, minsize=100)
+        nova_mini_f2    .columnconfigure(0, weight = 1, minsize=120)
         nova_mini_f2    .columnconfigure(1, weight = 1)
         nova_mini_f2    .rowconfigure(0, weight=1)
         nova_mini_f2    .rowconfigure(1, weight=1)
@@ -108,7 +108,7 @@ def connection_status(parent):
         arduino_mini_f     .columnconfigure(1, weight = 1)
         arduino_mini_f     .rowconfigure(0, weight = 1)
 
-        arduino_mini_f2    .columnconfigure(0, weight=1, minsize=100)
+        arduino_mini_f2    .columnconfigure(0, weight=1, minsize=120)
         arduino_mini_f2    .columnconfigure(1, weight=1)
         arduino_mini_f2    .rowconfigure(0, weight=1)
 
