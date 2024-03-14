@@ -1,7 +1,7 @@
 from tkinter import *
 from tkinter import ttk
 
-def nova_configuration(parent):
+def nova_configuration(parent, gsa_obj):
         frame = ttk.Frame(parent, padding=(10,10,10,10))
         frame['width'] = 384
         frame['borderwidth'] = 2
@@ -36,7 +36,17 @@ def nova_configuration(parent):
         cpc_b = ttk.Button(frame, text="Configure Pyro Channels", padding=(0,5,0,5))
         send_b = ttk.Button(frame, text="Send")
 
+        # STATE ATTACHED HERE
+        # now attaching state (these are StringVars) and setting default values
+        mda_cb          ['textvariable'] = gsa_obj.mda
+        apg_delay_cb    ['textvariable'] = gsa_obj.apg_delay
+        apg_lockout_cb  ['textvariable'] = gsa_obj.apg_lockout
+        ign_fmode_cb    ['textvariable'] = gsa_obj.ign_fmode
 
+
+
+
+        # Gridding and configuring columns/rows
         header_lb.grid(column=0, row=0, columnspan=2)
 
         mda_lb.grid(column=0, row=1)

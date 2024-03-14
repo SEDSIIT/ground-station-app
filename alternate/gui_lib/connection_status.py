@@ -1,7 +1,7 @@
 from tkinter import *
 from tkinter import ttk
 
-def connection_status(parent):
+def connection_status(parent, gsa_obj):
 
         frame = ttk.Frame(parent, padding=(10,0,10,10))
         frame['width'] = 384
@@ -18,7 +18,11 @@ def connection_status(parent):
 
         #in nova_mini_f
         nova_connect_btn = ttk.Button(nova_mini_f, text="Connect")
-        nova_light = ttk.Radiobutton(nova_mini_f)
+        nova_light = ttk.Frame(nova_mini_f, width=20, height=20)
+        nova_light['width'] = 20
+        nova_light['height'] = 20
+        nova_light['style'] = 'Red.TFrame'
+        #nova_light['background'] = 'red'
 
         nova_log_txt = Text(frame, width = 20, height = 5)
         nova_mini_f2 = ttk.Frame(frame, padding=(0,0,5,0))
@@ -43,7 +47,10 @@ def connection_status(parent):
         
         #in arduino_mini_f
         arduino_connect_btn = ttk.Button(arduino_mini_f, text="Connect")
-        arduino_light = ttk.Radiobutton(arduino_mini_f)
+        arduino_light = ttk.Frame(arduino_mini_f, width = 20, height = 20)
+        arduino_light['width'] = 20
+        arduino_light['height'] = 20
+        arduino_light['style'] = 'Red.TFrame'
 
         arduino_log_txt = Text(frame, width=20, height=5)
         arduino_mini_f2 = ttk.Frame(frame, padding=(0,0,5,0))
@@ -54,6 +61,24 @@ def connection_status(parent):
         arduino_comport_cb['values'] = ('COM1','COM4')
         arduino_comport_cb.state(['readonly'])
 
+
+        # STATE ATTACHED HERE
+        # now attaching state (these are StringVars) and setting default values
+        nova_callsign_e   ['textvariable'] = gsa_obj.nova_callsign_e
+        nova_frequency_cb ['textvariable'] = gsa_obj.nova_frequency
+        nova_baud_cb      ['textvariable'] = gsa_obj.nova_baud
+        gsa_obj.nova_log                   = nova_log_txt
+        gsa_obj.nova_light                 = nova_light
+        arduino_comport_cb['textvariable'] = gsa_obj.arduino_comport
+        gsa_obj.arduino_log                = arduino_log_txt
+        gsa_obj.arduino_light              = arduino_light
+
+        gsa_obj.nova_callsign_e.set('-')
+        gsa_obj.nova_frequency .set('-')
+        gsa_obj.nova_baud      .set('-')
+        gsa_obj.arduino_comport.set('-')
+
+        # Gridding and configuring columns/rows
         connection_status_lf.grid(column=0, row=0, columnspan=2, sticky=(W,E))
         connection_status_lb.grid(column=0, row=0)
         
@@ -73,7 +98,7 @@ def connection_status(parent):
         nova_frequency_lb.grid(column=0, row=1)
         nova_frequency_cb.grid(column=1, row=1, sticky=(E))
         nova_baud_lb     .grid(column=0, row=2)
-        nova_baud_cb     .grid(column=1, row=2)
+        nova_baud_cb     .grid(column=1, row=2, sticky=(E))
 
         arduino_lb         .grid(column=0,row=3)
         arduino_mini_f     .grid(column=1,row=3, sticky=(N,W,E,S))

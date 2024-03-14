@@ -10,6 +10,9 @@ def set_styles(s):
     s.configure('Display.TLabel', font=('bell',16),padding=(5,20,5,20))
     s.configure('Display2.TLabel', font=('bell',16),padding=(5,10,5,10))
     s.configure('DisplayInner.TLabel', font=('bell',16), padding=(5,10,5,10))
+    s.configure('Red.TFrame', background = 'red')
+    s.configure('Green.TFrame', background = 'green')
+
     
     #s.configure('Display.TFrame', borderwidth=2, relief="raised")
     #s.configure('Display.TLabelframe', font=('bell',16), padding=(5,20,5,20), relief="flat", borderwidth=2)

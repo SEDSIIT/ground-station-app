@@ -1,7 +1,7 @@
 from tkinter import *
 from tkinter import ttk
 
-def live_metrics(parent):
+def live_metrics(parent, gsa_obj):
         
         frame = ttk.Frame(parent, padding=(10,0,10,10))
         frame['width'] = 256
@@ -40,13 +40,30 @@ def live_metrics(parent):
         age_f['borderwidth'] = 2
         age_f['relief'] = 'raised'
 
-        call_sign_flb = ttk.Label(call_sign_f, text="NVFCRKT", style="DisplayInner.TLabel")
-        serial_flb    = ttk.Label(serial_f, text="232", style="DisplayInner.TLabel")
-        flight_flb    = ttk.Label(flight_f, text="557", style="DisplayInner.TLabel")
-        state_flb     = ttk.Label(state_f, text="342", style="DisplayInner.TLabel")
-        rssi_flb      = ttk.Label(rssi_f, text="3423", style="DisplayInner.TLabel")
-        age_flb       = ttk.Label(age_f, text="222", style="DisplayInner.TLabel")
-        
+        call_sign_flb = ttk.Label(call_sign_f, style="DisplayInner.TLabel")
+        serial_flb    = ttk.Label(serial_f, style="DisplayInner.TLabel")
+        flight_flb    = ttk.Label(flight_f, style="DisplayInner.TLabel")
+        state_flb     = ttk.Label(state_f, style="DisplayInner.TLabel")
+        rssi_flb      = ttk.Label(rssi_f, style="DisplayInner.TLabel")
+        age_flb       = ttk.Label(age_f, style="DisplayInner.TLabel")
+
+        # STATE ATTACHED HERE
+        # now attaching state (these are StringVars) and setting default values
+        call_sign_flb['textvariable'] = gsa_obj.call_sign
+        serial_flb   ['textvariable'] = gsa_obj.serial
+        flight_flb   ['textvariable'] = gsa_obj.flight
+        state_flb    ['textvariable'] = gsa_obj.state
+        rssi_flb     ['textvariable'] = gsa_obj.rssi
+        age_flb      ['textvariable'] = gsa_obj.age
+
+        gsa_obj.call_sign.set("-")
+        gsa_obj.serial   .set("-")
+        gsa_obj.flight   .set("-")
+        gsa_obj.state    .set("-")
+        gsa_obj.rssi     .set("-")
+        gsa_obj.age      .set("-")
+
+        # Gridding/Configuring done here
         call_sign_lb.grid(column=0,row=0)
         serial_lb   .grid(column=0,row=1)
         flight_lb   .grid(column=0,row=2)
