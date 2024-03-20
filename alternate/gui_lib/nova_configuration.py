@@ -33,7 +33,7 @@ def nova_configuration(parent, gsa_obj):
         bf_cb['values'] = ('4000')
 
 
-        cpc_b = ttk.Button(frame, text="Configure Pyro Channels", padding=(0,5,0,5))
+        cpc_b = ttk.Button(frame, text="Configure Pyro Channels", padding=(0,5,0,5), command=gsa_obj.open_pyro_channels)
         send_b = ttk.Button(frame, text="Send")
 
         # STATE ATTACHED HERE

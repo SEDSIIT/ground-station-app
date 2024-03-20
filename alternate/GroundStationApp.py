@@ -5,9 +5,8 @@ import time
 from gui_lib import live_metrics as lm_md
 from gui_lib import connection_status as cs_md
 from gui_lib import nova_configuration as nc_md
+from gui_lib import pyro_channels as pc_md
 from gui_lib import styles 
-
-
 
 
 class GroundStationApp:
@@ -61,6 +60,14 @@ class GroundStationApp:
         self.apg_lockout     = StringVar()
         self.ign_fmode       = StringVar()
         self.bf              = StringVar()
+        self.a_pyro_data     = {}
+        # key : value, key is param, value is tuple pair
+        # key : (enabled? , value)
+        # i.e
+        # a_val : (true/false , a_val_e)
+
+        
+
 
         self.root.title("Control Panel")
         # following 16:9 aspect ration
@@ -93,7 +100,21 @@ class GroundStationApp:
 
     def set_as_ref(self, as_obj):
         self.as_obj = as_obj
-        
+
+    def open_pyro_channels(self):
+        pyro_root = Toplevel(self.root)
+        pyro_root.title("Pyro Channels Configuration")
+        pyro_root.columnconfigure(0, weight = 1)
+        pyro_root.rowconfigure(0, weight = 1)
+
+        pyro_frame = pc_md.pyro_channels(pyro_root, self)
+        pyro_frame.grid(column = 0, row = 0, sticky=(N, W, E, S))
+
+
+        pyro_root.transient(self.root)
+        pyro_root.grab_set()
+        self.root.wait_window(pyro_root)
+
     def run(self):
         self.root.mainloop()
 
