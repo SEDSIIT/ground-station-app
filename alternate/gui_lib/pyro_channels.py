@@ -9,26 +9,26 @@ def pyro_channels(parent, gsa_obj):
 
 
     # Common
-    val_lb  = ttk.Label(frame, text="Vertical Acceleration Less than (m/s^2)")
-    vag_lb  = ttk.Label(frame, text="Vertical Acceleration Greater than (m/s^2)")
-    arl_lb  = ttk.Label(frame, text="Ascent Rate Less Than (m/s)")
-    arg_lb  = ttk.Label(frame, text="Ascent Rate Greater Than (m/s)")
-    hapl_lb = ttk.Label(frame, text="Height Above Pad Less Than (m)")
-    hapg_lb = ttk.Label(frame, text="Height Above Pad Greater Than (m)")
-    afvl_lb = ttk.Label(frame, text="Angle From Vertical Less Than (degrees)")
-    afvg_lb = ttk.Label(frame, text="Angle From Vertical Greater Than (degrees)")
-    tsll_lb = ttk.Label(frame, text="Time Since Launch Less Than (s)")
-    tslg_lb = ttk.Label(frame, text="Time Since Launch Greater Than (s)")
-    afm_lb  = ttk.Label(frame, text="After Motor Number")
-    daoc_lb = ttk.Label(frame, text="Delay After Other Conditions (s)")
-    fsb_lb  = ttk.Label(frame, text="Flight State Before")
-    fsa_lb  = ttk.Label(frame, text="Flight State After")
+    val_lb  = ttk.Label(frame, text="Vertical Acceleration Less than (m/s^2)", padding=(0,5,0,5))
+    vag_lb  = ttk.Label(frame, text="Vertical Acceleration Greater than (m/s^2)", padding=(0,5,0,5))
+    arl_lb  = ttk.Label(frame, text="Ascent Rate Less Than (m/s)", padding=(0,5,0,5))
+    arg_lb  = ttk.Label(frame, text="Ascent Rate Greater Than (m/s)", padding=(0,5,0,5))
+    hapl_lb = ttk.Label(frame, text="Height Above Pad Less Than (m)", padding=(0,5,0,5))
+    hapg_lb = ttk.Label(frame, text="Height Above Pad Greater Than (m)", padding=(0,5,0,5))
+    afvl_lb = ttk.Label(frame, text="Angle From Vertical Less Than (degrees)", padding=(0,5,0,5))
+    afvg_lb = ttk.Label(frame, text="Angle From Vertical Greater Than (degrees)", padding=(0,5,0,5))
+    tsll_lb = ttk.Label(frame, text="Time Since Launch Less Than (s)", padding=(0,5,0,5))
+    tslg_lb = ttk.Label(frame, text="Time Since Launch Greater Than (s)", padding=(0,5,0,5))
+    afm_lb  = ttk.Label(frame, text="After Motor Number", padding=(0,5,0,5))
+    daoc_lb = ttk.Label(frame, text="Delay After Other Conditions (s)", padding=(0,5,0,5))
+    fsb_lb  = ttk.Label(frame, text="Flight State Before", padding=(0,5,0,5))
+    fsa_lb  = ttk.Label(frame, text="Flight State After", padding=(0,5,0,5))
 
-    a_pyro_lb = ttk.Label(frame, text="Pyro Channel A")
+    a_pyro_lb = ttk.Label(frame, text="Pyro Channel A" , padding=(0,5,0,5))
 
-    pfr_lb = ttk.Label(frame, text="Pyro Firing Time (s)")
+    pfr_lb = ttk.Label(frame, text="Pyro Firing Time (s)", padding=(0,5,0,5))
     pfr_e  = ttk.Entry(frame)
-    done_btn = ttk.Button(frame, text="Done")
+    done_btn = ttk.Button(frame, text="Done", padding=(0,5,0,5))
 
     # Pyro Channel A
     a_val_chkb  = ttk.Checkbutton(frame)

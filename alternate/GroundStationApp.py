@@ -6,6 +6,7 @@ from gui_lib import live_metrics as lm_md
 from gui_lib import connection_status as cs_md
 from gui_lib import nova_configuration as nc_md
 from gui_lib import pyro_channels as pc_md
+from gui_lib import monitor as mr_md
 from gui_lib import styles 
 
 
@@ -67,8 +68,6 @@ class GroundStationApp:
         # a_val : (true/false , a_val_e)
 
         
-
-
         self.root.title("Control Panel")
         # following 16:9 aspect ration
         self.root_mainframe = ttk.Frame(self.root)
@@ -96,6 +95,16 @@ class GroundStationApp:
         self.root_mainframe.columnconfigure(1, weight=1)
         self.root_mainframe.columnconfigure(2, weight=1)
         self.root_mainframe.rowconfigure(0, weight=1)
+
+        # Monitor Panel window widget instantiations
+        mr = mr_md.monitor(self.subroot, self)
+
+
+        # Monitor Panel window gridding widgets
+        mr.grid(column=0, row=0, sticky=(N,W,E,S))
+
+
+
     
 
     def set_as_ref(self, as_obj):
