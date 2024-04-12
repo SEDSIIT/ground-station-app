@@ -25,7 +25,7 @@ def nova_configuration(parent, gsa_obj):
 
         ign_fmode_lb = ttk.Label(frame, text="Igniter Firing Mode", padding=(0,5,0,5))
         ign_fmode_cb = ttk.Combobox(frame)
-        ign_fmode_cb['values'] = ('Seperation & Apogee')
+        ign_fmode_cb['values'] = ('Seperation & Apogee','')
         ign_fmode_cb.state(['readonly'])
 
         bf_lb = ttk.Label(frame, text="Beeper Frequency", padding=(0,5,0,5))

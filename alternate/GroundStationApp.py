@@ -25,7 +25,7 @@ class GroundStationApp:
 
         # Root toplevel window
         # set theme here!
-        self.root = ThemedTk(theme="radiance")
+        self.root = ThemedTk(theme="adapta")
         self.root.columnconfigure(0, weight = 1)
         self.root.rowconfigure(0, weight=1)
         # That being said, we will still define custom styles that are derived from the styles 
@@ -66,6 +66,9 @@ class GroundStationApp:
         # key : (enabled? , value)
         # i.e
         # a_val : (true/false , a_val_e)
+
+        # Monitor
+        self.BIG_current_ = None
 
         
         self.root.title("Control Panel")

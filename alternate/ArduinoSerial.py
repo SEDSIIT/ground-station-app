@@ -22,6 +22,25 @@ class ArduinoSerial:
         self.gsa_obj.nova_light['style'] = 'Red.TFrame'
         self.gsa_obj.mda.set("def")
         print("Final input test")
+
+        # Dummy data setup
+        self.gsa_obj.nova_light['style'] = 'Green.TFrame'
+        self.gsa_obj.arduino_light['style'] = 'Green.TFrame'
+
+        self.gsa_obj.call_sign.set("KO4WVK")
+        self.gsa_obj.serial   .set(11051)
+        self.gsa_obj.flight   .set(1)
+        self.gsa_obj.state    .set("drogue")
+        self.gsa_obj.rssi     .set(-33)
+        self.gsa_obj.age      .set(0)
+
+        self.mda              .set()
+        self.apg_delay        .set()
+        self.apg_lockout      .set()
+        
+
+
+        
         pass
 
     def update(self):

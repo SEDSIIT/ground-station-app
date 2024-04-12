@@ -59,7 +59,9 @@ def pyro_channels(parent, gsa_obj):
     a_amn_e     = ttk.Entry      (frame)
     a_daoc_e    = ttk.Entry      (frame)
     a_fsb_cb    = ttk.Combobox   (frame)
+    a_fsb_cb['values'] = ('Boost')
     a_fsa_cb    = ttk.Combobox   (frame)
+    a_fsa_cb['values'] = ('Boost')
 
     # Gridding
     # Common
