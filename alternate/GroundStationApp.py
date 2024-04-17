@@ -46,6 +46,8 @@ class GroundStationApp:
         self.age       = StringVar()
 
         # connection_status
+        self.connection_status = StringVar()
+        self.connection_status_lb = None
         self.nova_callsign_e  = StringVar()
         self.nova_frequency   = StringVar()
         self.nova_baud        = StringVar()

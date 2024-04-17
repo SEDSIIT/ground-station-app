@@ -27,6 +27,8 @@ class ArduinoSerial:
         self.gsa_obj.nova_light['style'] = 'Green.TFrame'
         self.gsa_obj.arduino_light['style'] = 'Green.TFrame'
 
+        self.gsa_obj.connection_status.set("CONNECTED")
+        self.gsa_obj.connection_status_lb['style'] = 'HeaderGreen.TLabel'
         self.gsa_obj.call_sign.set("KO4WVK")
         self.gsa_obj.serial   .set(11051)
         self.gsa_obj.flight   .set(1)
@@ -34,10 +36,10 @@ class ArduinoSerial:
         self.gsa_obj.rssi     .set(-33)
         self.gsa_obj.age      .set(0)
 
-        self.mda              .set()
-        self.apg_delay        .set()
-        self.apg_lockout      .set()
-        
+        self.gsa_obj.mda              .set(3040)
+        self.gsa_obj.apg_delay        .set(5.25)
+        self.gsa_obj.apg_lockout      .set(10.68)
+        self.gsa_obj.bf               .set(4000)
 
 
         

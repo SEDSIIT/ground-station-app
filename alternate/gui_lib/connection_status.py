@@ -64,6 +64,8 @@ def connection_status(parent, gsa_obj):
 
         # STATE ATTACHED HERE
         # now attaching state (these are StringVars) and setting default values
+        connection_status_lb['textvariable'] = gsa_obj.connection_status
+        gsa_obj.connection_status_lb = connection_status_lb
         nova_callsign_e   ['textvariable'] = gsa_obj.nova_callsign_e
         nova_frequency_cb ['textvariable'] = gsa_obj.nova_frequency
         nova_baud_cb      ['textvariable'] = gsa_obj.nova_baud
@@ -73,6 +75,7 @@ def connection_status(parent, gsa_obj):
         gsa_obj.arduino_log                = arduino_log_txt
         gsa_obj.arduino_light              = arduino_light
 
+        gsa_obj.connection_status.set('-')
         gsa_obj.nova_callsign_e.set('-')
         gsa_obj.nova_frequency .set('-')
         gsa_obj.nova_baud      .set('-')
