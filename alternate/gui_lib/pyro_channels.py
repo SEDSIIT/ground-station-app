@@ -28,7 +28,7 @@ def pyro_channels(parent, gsa_obj):
 
     pfr_lb = ttk.Label(frame, text="Pyro Firing Time (s)", padding=(0,5,0,5))
     pfr_e  = ttk.Entry(frame)
-    done_btn = ttk.Button(frame, text="Done", padding=(0,5,0,5))
+    done_btn = ttk.Button(frame, text="Done", padding=(0,5,0,5), command= lambda: save_and_close(parent))
 
     # Pyro Channel A
     a_val_chkb  = ttk.Checkbutton(frame)
@@ -59,7 +59,7 @@ def pyro_channels(parent, gsa_obj):
     a_amn_e     = ttk.Entry      (frame)
     a_daoc_e    = ttk.Entry      (frame)
     a_fsb_cb    = ttk.Combobox   (frame)
-    a_fsb_cb['values'] = ('Boost')
+    a_fsb_cb['values'] = 'Boost'
     a_fsa_cb    = ttk.Combobox   (frame)
     a_fsa_cb['values'] = ('Boost')
 
@@ -85,8 +85,6 @@ def pyro_channels(parent, gsa_obj):
     pfr_lb.grid(column = 0, row = 15, sticky=(W))
     pfr_e.grid(column = 2, row = 15, columnspan = 7, sticky=(W))
     done_btn.grid(column = 8, row = 16)
-
-
 
 
 
@@ -145,9 +143,8 @@ def pyro_channels(parent, gsa_obj):
     return frame    
 
 
-
-
-
+def save_and_close(frame):
+    frame.destroy()
 
 
 

@@ -1,6 +1,6 @@
 import tkinter as tk
 import lib.app_settings as settings
-import pages.core 
+import pages.core
 
 # Get window screen information to scale window properly
 def get_win_dimensions():

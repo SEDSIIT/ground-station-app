@@ -5,7 +5,7 @@ import lib.window
 import os
 import shutil
 
-def select_file():
+def select_file(self,page,parent,controller):
     '''Creates a window to select a file and plots the file data on the DataAnalysis page'''
     try:
         temp_file_path = askopenfilename()
@@ -17,7 +17,7 @@ def select_file():
         print("Selected data file path: %s" % (settings.PATH_DATAFILE))
     plot.plot_static()
     plot.table_static()
-    lib.window.refresh()
+    lib.window.refresh(self,page,parent,controller)
 
 def save_file(): 
     '''Save the current data on the temporary telemetry data file on a file of the user's choosing'''

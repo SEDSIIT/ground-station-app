@@ -17,6 +17,8 @@ def test_io():
       
 
 def main():
+
+        
         gsa_obj = GroundStationApp()
         as_obj = ArduinoSerial()
         
@@ -29,11 +31,6 @@ def main():
         gsa_obj.run()
 
         test_thread.join()
-
-
-        
-
-
 
 if (__name__ == '__main__'):
         main()
