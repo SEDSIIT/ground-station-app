@@ -4,6 +4,11 @@ import threading
 import time
 from GroundStationApp import GroundStationApp
 from ArduinoSerial import ArduinoSerial
+from gui_lib import pyro_channels
+
+
+pyroChanConf = pyro_channels.PyroConf()
+pyroChanSema = threading.Semaphore(1)
 
 def test_io():
       time.sleep(10)

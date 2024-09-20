@@ -28,7 +28,7 @@ def pyro_channels(parent, gsa_obj):
 
     pfr_lb = ttk.Label(frame, text="Pyro Firing Time (s)", padding=(0,5,0,5))
     pfr_e  = ttk.Entry(frame)
-    done_btn = ttk.Button(frame, text="Done", padding=(0,5,0,5), command= lambda: save_and_close(parent))
+    done_btn = ttk.Button(frame, text="Done", padding=(0,5,0,5), command = lambda: save_and_close(parent))
 
     # Pyro Channel A
     a_val_chkb  = ttk.Checkbutton(frame)
@@ -145,6 +145,49 @@ def pyro_channels(parent, gsa_obj):
 
 def save_and_close(frame):
     frame.destroy()
+
+
+class PyroConf:
+    def __init__(self):
+        self.params = ["vert_acc_upper",
+                      "vert_acc_lower",
+                      "ascent_rate_upper",
+                      "ascent_rate_lower",
+                      "pad_height_upper",
+                      "pad_height_lower",
+                      "angle_from_vert_upper",
+                      "angle_from_vert_lower",
+                      "t_since_launch_upper",
+                      "t_since_launch_lower",
+                      "after_motor",
+                      "other_cond_delay",
+                      "flight_state_before",
+                      "flight_state_after",
+                      "pyro_firing_time"]
+        
+        self.vals = {k: None for k in self.params}
+
+    def set_attr(self, param: str, value) -> None:
+        if param not in self.params:
+            print("Error: attempting to set unknown parameter in pyro config")
+            return
+        
+        self.vals[param] = value
+        return
+
+    def get_attr(self, param: str):
+        if param not in self.params:
+            print("Error: attempting to get unknown parameter in pyro config")
+            return None
+        
+        ret = self.vals[param]
+        if ret is None:
+            print(f"Error: parameter {param} has not been set yet")
+
+        return ret
+    
+    def get_valid_params(self) -> list[str]:
+        return self.params
 
 
 
