@@ -8,7 +8,7 @@ from gui_lib import pyro_channels
 
 
 pyroChanConf = pyro_channels.PyroConf()
-pyroChanSema = threading.Semaphore(1)
+updatePyroChan = threading.Event()
 
 def test_io():
       time.sleep(10)
@@ -30,10 +30,10 @@ def main():
         gsa_obj.set_as_ref(as_obj)
         as_obj.set_gsa_ref(gsa_obj)
 
-        test_thread = threading.Thread(target=as_obj.run, args=())
+        test_thread = threading.Thread(target=as_obj.run, args=(pyroChanConf, updatePyroChan))
         test_thread.start()
 
-        gsa_obj.run()
+        gsa_obj.run(pyroChanConf, updatePyroChan)
 
         test_thread.join()
 

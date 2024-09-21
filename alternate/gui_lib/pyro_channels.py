@@ -28,7 +28,7 @@ def pyro_channels(parent, gsa_obj):
 
     pfr_lb = ttk.Label(frame, text="Pyro Firing Time (s)", padding=(0,5,0,5))
     pfr_e  = ttk.Entry(frame)
-    done_btn = ttk.Button(frame, text="Done", padding=(0,5,0,5), command = lambda: save_and_close(parent))
+    done_btn = ttk.Button(frame, text="Done", padding=(0,5,0,5), command = lambda: save_and_close(parent, gsa_obj.i_pyroChanConf, gsa_obj.i_updatePyroChan))
 
     # Pyro Channel A
     a_val_chkb  = ttk.Checkbutton(frame)
@@ -142,11 +142,6 @@ def pyro_channels(parent, gsa_obj):
 
     return frame    
 
-
-def save_and_close(frame):
-    frame.destroy()
-
-
 class PyroConf:
     def __init__(self):
         self.params = ["vert_acc_upper",
@@ -166,6 +161,8 @@ class PyroConf:
                       "pyro_firing_time"]
         
         self.vals = {k: None for k in self.params}
+
+        self.uninitialized = True
 
     def set_attr(self, param: str, value) -> None:
         if param not in self.params:
@@ -190,7 +187,10 @@ class PyroConf:
         return self.params
 
 
-
+def save_and_close(frame, pyroConf: PyroConf, updatePyroChan):
+    pyroConf.set_attr("vert_acc_upper", 6969)
+    updatePyroChan.set()
+    frame.destroy()
 
 
 

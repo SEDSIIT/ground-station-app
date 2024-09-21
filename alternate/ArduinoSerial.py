@@ -1,5 +1,10 @@
 import time
 
+def serial_poll():
+        print("Polling serial device for status...")
+        pass
+
+
 class ArduinoSerial:
     def __init__(self):
         # this will be the reference to the ground station object
@@ -8,12 +13,25 @@ class ArduinoSerial:
 
     def set_gsa_ref(self, gsa_obj):
         self.gsa_obj = gsa_obj
-    
-    def run(self):
 
-        print("Arduino Serial run method not implemented")
+    def run(self, pyroChanConf, updatePyroChan):
+
+        print("Arduino Serial still in developement")
+
+        # Main loop
+        while(True):
+            time.sleep(1)
+
+            serial_poll()
+
+            if(updatePyroChan.is_set()): 
+                print(f"Received data {pyroChanConf.get_attr('vert_acc_upper')} in serial thread")
+                updatePyroChan.clear()
+            
+
+
         # print("Input 1")
-        # 
+        
         # time.sleep(2)
         # print("Input 2")
         # self.gsa_obj.nova_light['style'] = 'Green.TFrame'
@@ -29,7 +47,7 @@ class ArduinoSerial:
         # self.gsa_obj.nova_light['style'] = 'Green.TFrame'
         # self.gsa_obj.arduino_light['style'] = 'Green.TFrame'
  
-        # self.gsa_obj.connection_status.set("CONNECTED")
+        # self.gsa_obj.connection_status.set("BABABOOEY")
         # self.gsa_obj.connection_status_lb['style'] = 'HeaderGreen.TLabel'
         # self.gsa_obj.call_sign.set("KO4WVK")
         # self.gsa_obj.serial   .set(11051)
@@ -45,7 +63,6 @@ class ArduinoSerial:
 
 
         
-        pass
+        
 
-    def update(self):
-        pass
+    

@@ -129,7 +129,10 @@ class GroundStationApp:
         pyro_root.grab_set()
         self.root.wait_window(pyro_root)
 
-    def run(self):
+    def run(self, pyroChanConf, updatePyroChan):
+        self.i_pyroChanConf = pyroChanConf
+        self.i_updatePyroChan = updatePyroChan
         self.root.mainloop()
+        
 
 
