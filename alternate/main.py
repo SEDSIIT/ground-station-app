@@ -30,12 +30,11 @@ def main():
         gsa_obj.set_as_ref(as_obj)
         as_obj.set_gsa_ref(gsa_obj)
 
-        test_thread = threading.Thread(target=as_obj.run, args=(pyroChanConf, updatePyroChan))
+        test_thread = threading.Thread(target=as_obj.run, args=(pyroChanConf, updatePyroChan), daemon=True)
         test_thread.start()
 
         gsa_obj.run(pyroChanConf, updatePyroChan)
 
-        test_thread.join()
 
 if (__name__ == '__main__'):
         main()
