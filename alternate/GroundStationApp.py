@@ -71,7 +71,6 @@ class GroundStationApp:
 
         # Monitor
         self.BIG_current_ = None
-
         
         self.root.title("Control Panel")
         # following 16:9 aspect ration
@@ -109,9 +108,6 @@ class GroundStationApp:
         mr.grid(column=0, row=0, sticky=(N,W,E,S))
 
 
-
-    
-
     def set_as_ref(self, as_obj):
         self.as_obj = as_obj
 
@@ -123,7 +119,6 @@ class GroundStationApp:
 
         pyro_frame = pc_md.pyro_channels(pyro_root, self)
         pyro_frame.grid(column = 0, row = 0, sticky=(N, W, E, S))
-
 
         pyro_root.transient(self.root)
         pyro_root.grab_set()

@@ -1,7 +1,7 @@
 import time
 
 def serial_poll():
-        print("Polling serial device for status...")
+        # print("Polling serial device for status...")
         pass
 
 
@@ -25,7 +25,7 @@ class ArduinoSerial:
             serial_poll()
 
             if(updatePyroChan.is_set()): 
-                print(f"Received data {pyroChanConf.get_attr('vert_acc_upper')} in serial thread")
+                print(f"Received data {pyroChanConf.get_attr('a_tsll_e').get()} in serial thread")
                 updatePyroChan.clear()
             
 

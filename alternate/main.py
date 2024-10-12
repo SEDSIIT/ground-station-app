@@ -7,7 +7,7 @@ from ArduinoSerial import ArduinoSerial
 from gui_lib import pyro_channels
 
 
-pyroChanConf = pyro_channels.PyroConf()
+pyroChanConf = None
 updatePyroChan = threading.Event()
 
 def test_io():
@@ -28,6 +28,7 @@ def main():
         as_obj = ArduinoSerial()
         
         gsa_obj.set_as_ref(as_obj)
+        pyroChanConf = pyro_channels.PyroConf()
         as_obj.set_gsa_ref(gsa_obj)
 
         test_thread = threading.Thread(target=as_obj.run, args=(pyroChanConf, updatePyroChan), daemon=True)
